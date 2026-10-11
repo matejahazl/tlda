@@ -1,0 +1,89 @@
+import { z } from "zod"
+import { cleanText, isSingleLine } from "@/lib/sanitize"
+
+export const ITEM_STATUSES = ["open", "in_progress", "done"] as const
+export const MIN_NOTES_LENGTH = 20 // min characters accepted for pasted notes
+export const MAX_NOTES_LENGTH = 20000 // max characters accepted for pasted notes
+export const MAX_TITLE_LENGTH = 120 // max characters in a meeting title
+export const MAX_ITEMS = 30 // max action items accepted from the LLM
+export const MAX_ITEM_TEXT_LENGTH = 300 // max characters in one action item
+export const MAX_OWNER_LENGTH = 80 // max characters in an item owner
+
+const notesSchema = z
+    .string({ error: "Notes are required" })
+    .transform(cleanText)
+    .pipe(
+        z
+            .string()
+            .min(
+                MIN_NOTES_LENGTH,
+                `Add a bit more detail, at least ${MIN_NOTES_LENGTH} characters`,
+            )
+            .max(
+                MAX_NOTES_LENGTH,
+                `Notes are too long, at most ${MAX_NOTES_LENGTH} characters`,
+            ),
+    )
+
+const titleSchema = z
+    .string()
+    .transform(cleanText)
+    .pipe(
+        z
+            .string()
+            .max(
+                MAX_TITLE_LENGTH,
+                `Title is too long, at most ${MAX_TITLE_LENGTH} characters`,
+            ),
+    )
+    .transform((title) => title || undefined)
+    .optional()
+
+export const createMeetingSchema = z.strictObject({
+    title: titleSchema,
+    notes: notesSchema,
+})
+
+export const setStatusSchema = z.strictObject({
+    status: z.enum(ITEM_STATUSES, { error: "Invalid status" }),
+})
+
+export const itemIdSchema = z
+    .string()
+    .regex(/^[1-9]\d*$/, "Invalid id")
+    .transform(Number)
+    .pipe(z.number().int().safe())
+
+const llmItemSchema = z.object({
+    text: z
+        .string()
+        .trim()
+        .min(1)
+        .max(MAX_ITEM_TEXT_LENGTH)
+        .refine(isSingleLine, "Item text must be a single line"),
+    owner: z
+        .string()
+        .trim()
+        .max(MAX_OWNER_LENGTH)
+        .refine(isSingleLine, "Owner must be a single line")
+        .nullish()
+        .transform((owner) => owner || undefined),
+})
+
+export const llmOutputSchema = z.object({
+    title: z.unknown().optional(),
+    items: z
+        .array(llmItemSchema)
+        .max(MAX_ITEMS)
+        .transform((items) => {
+            const seen = new Set<string>()
+            return items.filter(({ text, owner }) => {
+                const key = `${text}\u0000${owner ?? ""}`
+                if (seen.has(key)) {
+                    return false
+                }
+                seen.add(key)
+                return true
+            })
+        }),
+})

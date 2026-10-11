@@ -27,6 +27,7 @@ const eslintConfig = defineConfig([
         rules: {
             "no-shadow": "off",
             "no-undef": "off",
+            "no-unused-vars": "off",
             curly: "warn",
             "@typescript-eslint/consistent-type-imports": "error",
             "@typescript-eslint/no-shadow": "error",
