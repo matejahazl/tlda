@@ -1,5 +1,5 @@
 import "server-only"
-import { type Env, env } from "@/lib/env"
+import { type Env, env } from "@/lib/server/env"
 import { LlmIntegrationService } from "./LlmIntegrationService"
 import { MockProvider } from "./providers/MockProvider"
 import type { LlmProvider } from "./types"

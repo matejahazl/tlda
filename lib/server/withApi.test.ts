@@ -1,14 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { AppError } from "@/lib/errors"
-import type * as LoggerModule from "@/lib/logger"
-import { logger } from "@/lib/logger"
-import { readJson } from "@/lib/validate"
-import { withApi } from "@/lib/withApi"
+import type * as LoggerModule from "@/lib/server/logger"
+import { logger } from "@/lib/server/logger"
+import { readJson } from "@/lib/server/validate"
+import { withApi } from "@/lib/server/withApi"
 
 const logs = vi.hoisted(() => [] as Record<string, unknown>[])
 
-vi.mock("@/lib/logger", async () => {
-    const actual = await vi.importActual<typeof LoggerModule>("@/lib/logger")
+vi.mock("@/lib/server/logger", async () => {
+    const actual = await vi.importActual<typeof LoggerModule>(
+        "@/lib/server/logger",
+    )
     return {
         ...actual,
         logger: actual.createLogger({

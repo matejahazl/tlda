@@ -1,5 +1,7 @@
+import "server-only"
 import type { z } from "zod"
 import { AppError } from "@/lib/errors"
+import { fieldMessages } from "@/lib/zodFields"
 
 const MAX_BODY_BYTES = 128 * 1024 // request body cap (20,000 chars of notes plus JSON escaping)
 const JSON_CONTENT_TYPE = /^application\/json\s*(;.*)?$/i
@@ -49,10 +51,7 @@ export function parseOrThrow<S extends z.ZodType>(
     if (result.success) {
         return result.data
     }
-    const fields: Record<string, string> = {}
-    for (const issue of result.error.issues) {
-        const field = issue.path.join(".") || fallbackField
-        fields[field] ??= issue.message
-    }
-    throw new AppError("VALIDATION_ERROR", { fields })
+    throw new AppError("VALIDATION_ERROR", {
+        fields: fieldMessages(result.error, fallbackField),
+    })
 }

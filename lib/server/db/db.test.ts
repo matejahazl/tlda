@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm"
 import { describe, expect, it } from "vitest"
-import { actionItems, createDb, meetings } from "@/lib/db"
+import { actionItems, createDb, meetings } from "@/lib/server/db"
 
 describe("database", () => {
     it("migrates, defaults status to open and cascades deletes", () => {

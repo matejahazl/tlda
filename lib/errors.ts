@@ -1,4 +1,4 @@
-import type { ErrorCode } from "@/app/types"
+import type { ErrorCode } from "@/types"
 
 type ErrorInfo = {
     status: number // HTTP status

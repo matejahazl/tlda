@@ -5,9 +5,9 @@ import {
     LlmUnavailableError,
     MockProvider,
 } from "@/integrations"
-import { createDb, type Db } from "@/lib/db"
-import { actionItems, meetings } from "@/lib/db/schema"
-import type * as LoggerModule from "@/lib/logger"
+import { createDb, type Db } from "@/lib/server/db"
+import { actionItems, meetings } from "@/lib/server/db/schema"
+import type * as LoggerModule from "@/lib/server/logger"
 import { MeetingService } from "@/services/MeetingService"
 import { PATCH } from "../app/api/items/[id]/route"
 import { GET, POST } from "../app/api/meetings/route"
@@ -21,8 +21,10 @@ const state = vi.hoisted(() => ({
 }))
 
 vi.mock("@/services", () => ({ getMeetingService: () => state.service }))
-vi.mock("@/lib/logger", async () => {
-    const actual = await vi.importActual<typeof LoggerModule>("@/lib/logger")
+vi.mock("@/lib/server/logger", async () => {
+    const actual = await vi.importActual<typeof LoggerModule>(
+        "@/lib/server/logger",
+    )
     return {
         ...actual,
         logger: actual.createLogger({

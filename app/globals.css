@@ -1,26 +1,126 @@
 @import "tailwindcss";
 
-:root {
-    --background: #ffffff;
-    --foreground: #171717;
-}
-
-@theme inline {
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
-    --font-sans: var(--font-geist-sans);
-    --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        --background: #0a0a0a;
-        --foreground: #ededed;
+/* Hover only on devices that really hover (not touch) */
+@custom-variant hover-fine {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
+            @slot;
+        }
     }
 }
 
-body {
-    background: var(--background);
-    color: var(--foreground);
-    font-family: Arial, Helvetica, sans-serif;
+@theme {
+    --color-bg: #f4f5f1;
+    --color-card: #ffffff;
+    --color-ink: #16191c;
+    --color-muted: #5b6168;
+    --color-line: #e4e6df;
+    --color-accent: #3340b5;
+    --color-accent-hover: #27339a;
+    --color-on-accent: #ffffff;
+
+    --color-open: #d9dcd3;
+    --color-open-ink: #16191c;
+    --color-progress: #f6dd92;
+    --color-progress-ink: #442f00;
+    --color-done: #bfe3cb;
+    --color-done-ink: #0d4222;
+    --color-done-fill: #2f7d4f;
+
+    --color-segment: #ecede8;
+    --color-track: #e3e5dd;
+    --color-skeleton: #e6e8e1;
+    --color-strike: #9aa0a6;
+    --color-field-line: #cdd0c8;
+    --color-placeholder: #6e747b;
+    --color-readonly: #f1f2ee;
+    --color-danger: #fdecea;
+    --color-danger-line: #f0b9b3;
+    --color-danger-ink: #7a1a13;
+
+    --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+    --font-serif: var(--font-instrument-serif), Georgia, serif;
+
+    --container-page: 1216px;
+
+    --shadow-card:
+        0 0 0 1px rgb(22 25 28 / 0.07), 0 1px 3px rgb(22 25 28 / 0.06);
+    --shadow-field: inset 0 0 0 1px var(--color-field-line);
+    --shadow-danger: inset 0 0 0 1px var(--color-danger-line);
+
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+    --animate-spin-fast: spin-fast 700ms linear infinite;
+    --animate-spin-slow: spin-fast 1600ms linear infinite;
+    --animate-pulse-soft: pulse-soft 1.2s ease-in-out infinite;
+    --animate-enter: enter 300ms var(--ease-out) both;
+    --animate-fade: fade 200ms ease both;
+}
+
+@keyframes spin-fast {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse-soft {
+    50% {
+        opacity: 0.45;
+    }
+}
+
+@keyframes enter {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+}
+
+@keyframes fade {
+    from {
+        opacity: 0;
+    }
+}
+
+@layer base {
+    html {
+        @apply h-full scroll-smooth scheme-light;
+    }
+
+    body {
+        @apply bg-bg font-sans text-ink;
+    }
+
+    :focus-visible {
+        @apply outline-2 outline-offset-2 outline-accent;
+    }
+
+    h1 {
+        @apply font-serif text-[72px] leading-none tracking-[0.02em];
+    }
+
+    h2 {
+        @apply font-serif text-[26px] leading-[1.2] tracking-[-0.005em];
+    }
+}
+
+@layer components {
+    .text-tagline {
+        @apply font-serif text-[22px] leading-[1.2];
+    }
+
+    .text-heading {
+        @apply font-serif text-[28px] leading-[1.15];
+    }
+
+    .btn-primary {
+        @apply inline-flex min-h-[48px] touch-manipulation items-center justify-center gap-[10px] rounded-[12px] bg-accent px-[20px] text-on-accent no-underline transition duration-160 ease-out;
+        @apply text-[15px] leading-normal font-semibold;
+        @apply motion-safe:not-disabled:active:scale-97 hover-fine:not-disabled:not-aria-busy:bg-accent-hover;
+        @apply disabled:not-aria-busy:cursor-not-allowed disabled:not-aria-busy:opacity-50 aria-busy:cursor-progress;
+    }
+
+    .field {
+        @apply block w-full rounded-[12px] bg-card px-[14px] py-[12px] text-base text-ink shadow-field placeholder:text-placeholder read-only:bg-readonly read-only:text-muted;
+    }
 }

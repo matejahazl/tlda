@@ -1,6 +1,6 @@
 import { createMeetingSchema } from "@/lib/schemas"
-import { parseOrThrow, readJson } from "@/lib/validate"
-import { withApi } from "@/lib/withApi"
+import { parseOrThrow, readJson } from "@/lib/server/validate"
+import { withApi } from "@/lib/server/withApi"
 import { getMeetingService } from "@/services"
 
 export const runtime = "nodejs" // better-sqlite3 needs Node

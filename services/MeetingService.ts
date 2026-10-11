@@ -1,11 +1,11 @@
 import "server-only"
 import { asc, desc, eq } from "drizzle-orm"
 import type { Logger } from "pino"
-import type { ActionItem, ErrorCode, ItemStatus, Meeting } from "@/app/types"
 import type { FailureReason, LlmIntegrationService } from "@/integrations"
-import type { Db } from "@/lib/db"
-import { actionItems, meetings } from "@/lib/db"
 import { AppError, ERROR_TABLE } from "@/lib/errors"
+import type { Db } from "@/lib/server/db"
+import { actionItems, meetings } from "@/lib/server/db"
+import type { ActionItem, ErrorCode, ItemStatus, Meeting } from "@/types"
 
 const DEFAULT_MEETING_TITLE = "Untitled meeting" // used when neither the user nor the model gives a valid title
 

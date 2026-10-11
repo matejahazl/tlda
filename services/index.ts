@@ -1,6 +1,6 @@
 import "server-only"
 import { getLlmIntegrationService } from "@/integrations"
-import { getDb } from "@/lib/db"
+import { getDb } from "@/lib/server/db"
 import { MeetingService } from "./MeetingService"
 
 export { MeetingService } from "./MeetingService"

@@ -1,7 +1,7 @@
 import "server-only"
 import type { DestinationStream, Logger } from "pino"
 import pino from "pino"
-import { env } from "@/lib/env"
+import { env } from "@/lib/server/env"
 
 const REDACTED_KEYS = [
     "apiKey",
