@@ -54,7 +54,7 @@ export function StatusButtons({
                         className={`inline-flex min-h-[40px] touch-manipulation items-center gap-[6px] whitespace-nowrap rounded-[10px] px-[12px] text-sm font-medium transition duration-160 ease-out motion-safe:active:scale-97 ${
                             isSelected
                                 ? option.selected
-                                : "text-muted hover-fine:text-ink"
+                                : "cursor-pointer text-muted hover-fine:text-ink"
                         }`}
                     >
                         <Icon className="size-[16px]" />
