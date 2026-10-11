@@ -22,7 +22,7 @@ export function useCreateMeeting(onCreated: (meeting: Meeting) => void) {
             setError(null)
 
             try {
-                const meeting = await apiFetch<Meeting>("/api/meetings", {
+                const meeting = await apiFetch<Meeting>("/notes/extract", {
                     method: "POST",
                     body,
                     signal: controller.signal,

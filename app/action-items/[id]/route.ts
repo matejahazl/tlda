@@ -7,7 +7,7 @@ export const runtime = "nodejs" // better-sqlite3 needs Node
 export const dynamic = "force-dynamic"
 
 export const PATCH = withApi<{ id: string }>(
-    "/api/items/:id",
+    "/action-items/:id",
     async (req, ctx) => {
         const id = parseOrThrow(itemIdSchema, ctx.params.id, "id")
         ctx.addLogFields({ itemId: id })
