@@ -7,7 +7,6 @@ export const MAX_NOTES_LENGTH = 20000 // max characters accepted for pasted note
 export const MAX_TITLE_LENGTH = 120 // max characters in a meeting title
 export const MAX_ITEMS = 30 // max action items accepted from the LLM
 export const MAX_ITEM_TEXT_LENGTH = 300 // max characters in one action item
-export const MAX_OWNER_LENGTH = 80 // max characters in an item owner
 
 const notesSchema = z
     .string({ error: "Notes are required" })
@@ -61,13 +60,6 @@ const llmItemSchema = z.object({
         .min(1)
         .max(MAX_ITEM_TEXT_LENGTH)
         .refine(isSingleLine, "Item text must be a single line"),
-    owner: z
-        .string()
-        .trim()
-        .max(MAX_OWNER_LENGTH)
-        .refine(isSingleLine, "Owner must be a single line")
-        .nullish()
-        .transform((owner) => owner || undefined),
 })
 
 export const llmOutputSchema = z.object({
@@ -77,12 +69,11 @@ export const llmOutputSchema = z.object({
         .max(MAX_ITEMS)
         .transform((items) => {
             const seen = new Set<string>()
-            return items.filter(({ text, owner }) => {
-                const key = `${text}\u0000${owner ?? ""}`
-                if (seen.has(key)) {
+            return items.filter(({ text }) => {
+                if (seen.has(text)) {
                     return false
                 }
-                seen.add(key)
+                seen.add(text)
                 return true
             })
         }),

@@ -17,7 +17,6 @@ describe("database", () => {
             .get()
 
         expect(item.status).toBe("open")
-        expect(item.owner).toBeNull()
 
         db.delete(meetings).where(eq(meetings.id, meeting.id)).run()
         expect(db.select().from(actionItems).all()).toHaveLength(0)

@@ -1,7 +1,7 @@
 {
     "version": "6",
     "dialect": "sqlite",
-    "id": "8b65397e-57a6-452d-8ceb-2fc86eed8cbb",
+    "id": "ef7b8b5d-e7e0-4c68-ab1c-2eedf161c3f6",
     "prevId": "00000000-0000-0000-0000-000000000000",
     "tables": {
         "action_items": {
@@ -26,13 +26,6 @@
                     "type": "text",
                     "primaryKey": false,
                     "notNull": true,
-                    "autoincrement": false
-                },
-                "owner": {
-                    "name": "owner",
-                    "type": "text",
-                    "primaryKey": false,
-                    "notNull": false,
                     "autoincrement": false
                 },
                 "status": {

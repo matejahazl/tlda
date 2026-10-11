@@ -21,7 +21,6 @@ export const actionItems = sqliteTable(
             .notNull()
             .references(() => meetings.id, { onDelete: "cascade" }),
         text: text("text").notNull(),
-        owner: text("owner"),
         status: text("status", { enum: ITEM_STATUSES })
             .notNull()
             .default("open"),

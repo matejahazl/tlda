@@ -2,7 +2,6 @@ CREATE TABLE `action_items` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`meeting_id` integer NOT NULL,
 	`text` text NOT NULL,
-	`owner` text,
 	`status` text DEFAULT 'open' NOT NULL,
 	`created_at` integer NOT NULL,
 	FOREIGN KEY (`meeting_id`) REFERENCES `meetings`(`id`) ON UPDATE no action ON DELETE cascade

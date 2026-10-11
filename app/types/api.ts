@@ -25,7 +25,6 @@ export type ApiErrorBody = {
 export type ActionItem = {
     id: number
     text: string
-    owner: string | null
     status: ItemStatus
 }
 

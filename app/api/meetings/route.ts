@@ -1,0 +1,29 @@
+import { createMeetingSchema } from "@/lib/schemas"
+import { parseOrThrow, readJson } from "@/lib/validate"
+import { withApi } from "@/lib/withApi"
+import { getMeetingService } from "@/services"
+
+export const runtime = "nodejs" // better-sqlite3 needs Node
+export const dynamic = "force-dynamic" // never serve the list from a cache
+
+export const GET = withApi("/api/meetings", async (_req, ctx) => {
+    const meetings = getMeetingService().list()
+    ctx.addLogFields({ meetingCount: meetings.length })
+    return { body: meetings }
+})
+
+export const POST = withApi("/api/meetings", async (req, ctx) => {
+    const raw = await readJson(req)
+    const { title, notes } = parseOrThrow(createMeetingSchema, raw)
+
+    const meeting = await getMeetingService().create(
+        {
+            title,
+            notes,
+            rawNotes: (raw as { notes: string }).notes,
+        },
+        ctx.log,
+    )
+    ctx.addLogFields({ meetingId: meeting.id, itemCount: meeting.items.length })
+    return { status: 201, body: meeting }
+})

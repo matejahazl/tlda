@@ -94,18 +94,13 @@ describe("setStatusSchema and itemIdSchema", () => {
 describe("llmOutputSchema", () => {
     const parse = (value: unknown) => llmOutputSchema.safeParse(value)
 
-    it("accepts items, trims them and drops null or blank owners", () => {
+    it("accepts items and trims them", () => {
         const result = parse({
-            items: [
-                { text: "  Send report ", owner: " Alice " },
-                { text: "Book room", owner: null },
-                { text: "Call Bob", owner: "" },
-            ],
+            items: [{ text: "  Send report " }, { text: "Book room" }],
         })
         expect(result.data?.items).toEqual([
-            { text: "Send report", owner: "Alice" },
-            { text: "Book room", owner: undefined },
-            { text: "Call Bob", owner: undefined },
+            { text: "Send report" },
+            { text: "Book room" },
         ])
     })
 
@@ -113,12 +108,12 @@ describe("llmOutputSchema", () => {
         expect(parse({ items: [] }).data?.items).toEqual([])
     })
 
-    it("dedupes identical items only", () => {
+    it("dedupes identical items", () => {
         const result = parse({
             items: [
-                { text: "Send report", owner: "Alice" },
-                { text: "Send report", owner: "Alice" },
-                { text: "Send report", owner: "Bob" },
+                { text: "Send report" },
+                { text: "Send report" },
+                { text: "Book room" },
             ],
         })
         expect(result.data?.items).toHaveLength(2)
@@ -129,8 +124,6 @@ describe("llmOutputSchema", () => {
             { text: "" },
             { text: "a".repeat(MAX_ITEM_TEXT_LENGTH + 1) },
             { text: "two\nlines" },
-            { text: "ok", owner: "a\nb" },
-            { text: "ok", owner: "a".repeat(81) },
             { text: 5 },
         ]) {
             expect(parse({ items: [{ text: "fine" }, bad] }).success).toBe(
