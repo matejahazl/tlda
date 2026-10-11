@@ -45,7 +45,7 @@ export function Planner({ initialMeetings }: { initialMeetings: Meeting[] }) {
                     </p>
                     <p className="text-muted">{summaryLine(meetings)}</p>
                 </div>
-                <a className="btn-primary" href="#meeting-form">
+                <a className="btn-primary lg:hidden" href="#meeting-form">
                     New meeting notes
                 </a>
             </header>
