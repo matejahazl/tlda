@@ -14,27 +14,16 @@ export async function readJson(req: Request): Promise<unknown> {
         })
     }
 
-    const chunks: Uint8Array[] = []
-    let total = 0
-    const reader = req.body?.getReader()
-    while (reader) {
-        const { done, value } = await reader.read()
-        if (done) {
-            break
-        }
-        total += value.byteLength
-        if (total > MAX_BODY_BYTES) {
-            await reader.cancel()
-            throw new AppError("PAYLOAD_TOO_LARGE")
-        }
-        chunks.push(value)
+    // shortcut: reads the whole body before the size check, fine for a local app, stream it if exposed
+    const bytes = new Uint8Array(await req.arrayBuffer())
+    if (bytes.byteLength > MAX_BODY_BYTES) {
+        throw new AppError("PAYLOAD_TOO_LARGE")
     }
 
     try {
-        const text = new TextDecoder("utf-8", { fatal: true }).decode(
-            Buffer.concat(chunks),
+        return JSON.parse(
+            new TextDecoder("utf-8", { fatal: true }).decode(bytes),
         )
-        return JSON.parse(text)
     } catch {
         throw new AppError("VALIDATION_ERROR", {
             message: "The request body is not valid JSON.",

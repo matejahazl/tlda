@@ -1,9 +1,5 @@
 import "server-only"
-import {
-    LlmBadOutputError,
-    LlmTimeoutError,
-    LlmUnavailableError,
-} from "./errors"
+import { LlmBadOutputError, LlmUnavailableError } from "./errors"
 import { parseLlmOutput } from "./parseOutput"
 import { buildUserMessage, SYSTEM_PROMPT } from "./prompt"
 import type {
@@ -16,7 +12,6 @@ import type {
 const LLM_TIMEOUT_MS = 30_000
 
 const PROVIDER_FAILURES = [
-    { type: LlmTimeoutError, reason: "timeout" },
     { type: LlmUnavailableError, reason: "provider_unavailable" },
     { type: LlmBadOutputError, reason: "provider_bad_output" },
 ] as const

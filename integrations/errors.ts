@@ -1,12 +1,5 @@
 // Providers map their own failures to these, so API error codes never change when swapping providers
 
-export class LlmTimeoutError extends Error {
-    constructor(message = "LLM call timed out", options?: ErrorOptions) {
-        super(message, options)
-        this.name = "LlmTimeoutError"
-    }
-}
-
 // Provider 5xx, network error or provider 429
 export class LlmUnavailableError extends Error {
     constructor(message = "LLM provider unavailable", options?: ErrorOptions) {

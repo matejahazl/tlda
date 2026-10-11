@@ -1,5 +1,4 @@
-import { cleanText, isSingleLine } from "@/lib/sanitize"
-import { llmOutputSchema, MAX_TITLE_LENGTH } from "@/lib/schemas"
+import { llmOutputSchema } from "@/lib/schemas"
 import type { Extraction } from "./types"
 
 const JSON_FENCE = /^```(?:json)?[ \t]*\r?\n([\s\S]*?)\r?\n?```$/i // one optional fence around the whole reply
@@ -32,22 +31,5 @@ export function parseLlmOutput(text: string): ParseResult {
         )
         return { ok: false, reason: isBadItem ? "prose" : "schema_mismatch" }
     }
-    return {
-        ok: true,
-        value: {
-            title: validModelTitle(result.data.title),
-            items: result.data.items,
-        },
-    }
-}
-
-// The title is cosmetic: anything invalid is dropped instead of failing the response
-function validModelTitle(value: unknown): string | undefined {
-    if (typeof value !== "string") {
-        return undefined
-    }
-    const title = cleanText(value)
-    return title && title.length <= MAX_TITLE_LENGTH && isSingleLine(title)
-        ? title
-        : undefined
+    return { ok: true, value: result.data }
 }

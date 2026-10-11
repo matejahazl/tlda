@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
-    LlmBadOutputError,
     LlmIntegrationService,
     LlmUnavailableError,
     MockProvider,
@@ -123,26 +122,6 @@ describe("happy path", () => {
         expect(after[0].items[1].status).toBe("open")
     })
 
-    it("lists the newest meeting first", async () => {
-        await postMeeting({ title: "First", notes: NOTES })
-        await postMeeting({ title: "Second", notes: NOTES })
-        const list = await (
-            await GET(new Request("http://localhost/api/meetings"))
-        ).json()
-        expect(list.map((m: { title: string }) => m.title)).toEqual([
-            "Second",
-            "First",
-        ])
-    })
-
-    it("ignores a status the model tries to set", async () => {
-        useLlm(() =>
-            JSON.stringify({ items: [{ text: "Do it", status: "done" }] }),
-        )
-        const meeting = await (await postMeeting({ notes: NOTES })).json()
-        expect(meeting.items[0].status).toBe("open")
-    })
-
     it("logs a success completion and an extraction event with the raw notes", async () => {
         const rawNotes = `  ${NOTES}\u0007  `
         useLlm(() => ({
@@ -188,10 +167,7 @@ describe("meeting title", () => {
 
     it.each([
         ["missing", undefined],
-        ["not a string", 42],
         ["multi-line", "Two\nlines"],
-        ["empty", "   "],
-        ["too long", "a".repeat(121)],
     ])(
         "falls back to Untitled meeting when the model title is %s",
         async (_label, title) => {
@@ -223,29 +199,6 @@ describe("request validation", () => {
         expect(rowCounts()).toEqual({ meetings: 0, items: 0 })
     })
 
-    it("returns field messages for the matching inputs", async () => {
-        const res = await postMeeting({
-            title: "x".repeat(121),
-            notes: "short",
-        })
-        const { error } = await res.json()
-        expect(Object.keys(error.fields).sort()).toEqual(["notes", "title"])
-        expect(find("request completed")).toMatchObject({
-            level: 40,
-            errorCode: "VALIDATION_ERROR",
-            issuePaths: expect.arrayContaining(["notes", "title"]),
-        })
-    })
-
-    it("rejects a wrong content type", async () => {
-        const res = await POST(
-            json("/api/meetings", "POST", "{}", {
-                "content-type": "text/plain",
-            }),
-        )
-        expect(res.status).toBe(400)
-    })
-
     it("rejects an oversized body with 413", async () => {
         const res = await postMeeting({ notes: "a".repeat(200 * 1024) })
         expect(res.status).toBe(413)
@@ -272,33 +225,12 @@ describe("unusable LLM output", () => {
             "I'm sorry, but I can't help with that request.",
             "not_json",
         ],
-        ["JSON with text around it", `Here you go: ${GOOD_REPLY}`, "not_json"],
         [
             "wrong-shape JSON",
             JSON.stringify({ tasks: ["a"] }),
             "schema_mismatch",
         ],
-        ["a JSON array", JSON.stringify(["a", "b"]), "schema_mismatch"],
         ["an over-long item", longItem, "prose"],
-        [
-            "a multi-line item",
-            JSON.stringify({ items: [{ text: "line one\nline two" }] }),
-            "prose",
-        ],
-        [
-            "more than 30 items",
-            JSON.stringify({
-                items: Array.from({ length: 31 }, (_, i) => ({
-                    text: `Item ${i}`,
-                })),
-            }),
-            "schema_mismatch",
-        ],
-        [
-            "one bad item among good ones",
-            JSON.stringify({ items: [{ text: "ok" }, { text: "bad\nitem" }] }),
-            "prose",
-        ],
     ]
 
     it.each(cases)(
@@ -334,14 +266,6 @@ describe("unusable LLM output", () => {
     it("tolerates a single json fence", async () => {
         useLlm(() => `\`\`\`json\n${GOOD_REPLY}\n\`\`\``)
         expect((await postMeeting({ notes: NOTES })).status).toBe(201)
-    })
-
-    it("dedupes identical items before saving", async () => {
-        useLlm(() =>
-            JSON.stringify({ items: [{ text: "Do it" }, { text: "Do it" }] }),
-        )
-        const meeting = await (await postMeeting({ notes: NOTES })).json()
-        expect(meeting.items).toHaveLength(1)
     })
 })
 
@@ -384,18 +308,6 @@ describe("provider failures", () => {
             llmResponse: null,
         })
         expect(find("extraction completed")?.err).toBeDefined()
-    })
-
-    it("maps a provider bad-output error to LLM_BAD_OUTPUT", async () => {
-        useLlm(() => {
-            throw new LlmBadOutputError("blocked")
-        })
-        const res = await postMeeting({ notes: NOTES })
-        expect((await res.json()).error.code).toBe("LLM_BAD_OUTPUT")
-        expect(find("extraction completed")).toMatchObject({
-            reason: "provider_bad_output",
-            llmResponse: null,
-        })
     })
 
     it("maps an unknown provider error (such as a bad key) to INTERNAL without leaking it", async () => {

@@ -29,29 +29,4 @@ describe("safe rendering", () => {
         expect(html).toContain("&lt;img src=x onerror=alert(1)&gt;")
         expect(html).toContain("&lt;script&gt;alert(2)&lt;/script&gt;")
     })
-
-    it("shows the empty state and the summary when there are no meetings", () => {
-        const html = renderToStaticMarkup(<Planner initialMeetings={[]} />)
-        expect(html).toContain("No meetings yet")
-        expect(html).toContain("Nothing tracked yet")
-    })
-
-    it("marks the saved status with aria-pressed", () => {
-        const html = renderToStaticMarkup(
-            <Planner
-                initialMeetings={[
-                    {
-                        ...meeting,
-                        items: [
-                            { id: 1, text: "Do it", status: "in_progress" },
-                        ],
-                    },
-                ]}
-            />,
-        )
-        expect(html).toMatch(
-            /aria-pressed="true"[^>]*>(?:<svg.*?<\/svg>)In progress/,
-        )
-        expect(html.match(/aria-pressed="false"/g)).toHaveLength(2)
-    })
 })

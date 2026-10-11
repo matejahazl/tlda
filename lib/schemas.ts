@@ -63,18 +63,16 @@ const llmItemSchema = z.object({
 })
 
 export const llmOutputSchema = z.object({
-    title: z.unknown().optional(),
+    title: z
+        .string()
+        .transform(cleanText)
+        .pipe(z.string().min(1).max(MAX_TITLE_LENGTH).refine(isSingleLine))
+        .optional()
+        .catch(undefined),
     items: z
         .array(llmItemSchema)
         .max(MAX_ITEMS)
-        .transform((items) => {
-            const seen = new Set<string>()
-            return items.filter(({ text }) => {
-                if (seen.has(text)) {
-                    return false
-                }
-                seen.add(text)
-                return true
-            })
-        }),
+        .transform((items) => [
+            ...new Map(items.map((item) => [item.text, item])).values(),
+        ]),
 })

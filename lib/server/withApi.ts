@@ -10,7 +10,6 @@ const REQUEST_ID_PATTERN = /^[\w.-]{1,64}$/ // short and log-safe, anything else
 export type ApiResult = { status?: number; body: unknown }
 
 export type ApiContext<P> = {
-    requestId: string
     log: Logger
     params: P
     addLogFields: (fields: Record<string, unknown>) => void // merged into the completion log
@@ -35,31 +34,49 @@ export function withApi<
             : randomUUID()
         const log = logger.child({ requestId })
         const extra: Record<string, unknown> = {}
-        const base = { method: req.method, route }
 
-        log.debug(base, "request started")
+        log.debug({ method: req.method, route }, "request started")
 
-        let status: number
-        let body: unknown
-        let failure: { error: unknown; appError: AppError } | undefined
+        const finish = (
+            status: number,
+            body: unknown,
+            level: "info" | "warn" | "error",
+            fields: Record<string, unknown>,
+        ) => {
+            log[level](
+                {
+                    ...extra,
+                    method: req.method,
+                    route,
+                    status,
+                    durationMs: Math.round(performance.now() - start),
+                    ...fields,
+                },
+                "request completed",
+            )
+            return Response.json(body, {
+                status,
+                headers: { "x-request-id": requestId },
+            })
+        }
+
         try {
             const params = routeCtx ? await routeCtx.params : ({} as P)
             const result = await handler(req, {
-                requestId,
                 log,
                 params,
                 addLogFields: (fields) => Object.assign(extra, fields),
             })
-            status = result.status ?? 200
-            body = result.body
+            return finish(result.status ?? 200, result.body, "info", {
+                outcome: "success",
+            })
         } catch (error) {
             const appError =
                 error instanceof AppError
                     ? error
                     : new AppError("INTERNAL", { cause: error })
-            failure = { error, appError }
-            status = ERROR_TABLE[appError.code].status
-            body = {
+            const { status, level } = ERROR_TABLE[appError.code]
+            const body = {
                 error: {
                     code: appError.code,
                     message: appError.message,
@@ -67,37 +84,15 @@ export function withApi<
                     requestId,
                 },
             } satisfies ApiErrorBody
+            return finish(status, body, level, {
+                outcome: "error",
+                errorCode: appError.code,
+                // validation failures log field paths, never the submitted values
+                ...(appError.fields && {
+                    issuePaths: Object.keys(appError.fields),
+                }),
+                ...(level === "error" && { err: error }),
+            })
         }
-
-        const completion = {
-            ...extra,
-            ...base,
-            status,
-            durationMs: Math.round(performance.now() - start),
-        }
-        if (!failure) {
-            log.info({ ...completion, outcome: "success" }, "request completed")
-        } else {
-            const { error, appError } = failure
-            const level = ERROR_TABLE[appError.code].level
-            log[level](
-                {
-                    ...completion,
-                    outcome: "error",
-                    errorCode: appError.code,
-                    // validation failures log field paths, never the submitted values
-                    ...(appError.fields && {
-                        issuePaths: Object.keys(appError.fields),
-                    }),
-                    ...(level === "error" && { err: error }),
-                },
-                "request completed",
-            )
-        }
-
-        return Response.json(body, {
-            status,
-            headers: { "x-request-id": requestId },
-        })
     }
 }
