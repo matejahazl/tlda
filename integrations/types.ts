@@ -1,3 +1,6 @@
+import type { z } from "zod"
+import type { llmOutputSchema } from "@/lib/schemas"
+
 export type LlmRequest = {
     system: string // instructions
     user: string // the notes
@@ -16,17 +19,12 @@ export interface LlmProvider {
     ): Promise<LlmResponse>
 }
 
-export type ExtractedItem = { text: string }
-
-export type Extraction = {
-    title?: string // a valid model-suggested title, if there was one
-    items: ExtractedItem[] // may be empty: deciding what that means is the caller's job
-}
+// A valid title (or undefined) and the deduped items, which may be empty: deciding what that means is the caller's job
+export type Extraction = z.output<typeof llmOutputSchema>
 
 export type FailureReason =
     | "timeout"
     | "provider_unavailable"
-    | "provider_bad_output"
     | "provider_error" // anything else, such as a bad API key
     | "not_json"
     | "schema_mismatch"

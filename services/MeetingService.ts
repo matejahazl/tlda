@@ -14,7 +14,6 @@ type FailureCode = FailureReason | "no_action_items"
 const FAILURE_CODES: Record<FailureCode, ErrorCode> = {
     timeout: "LLM_TIMEOUT",
     provider_unavailable: "LLM_UNAVAILABLE",
-    provider_bad_output: "LLM_BAD_OUTPUT",
     provider_error: "INTERNAL", // for example a bad API key: our problem, not the user's
     not_json: "LLM_BAD_OUTPUT",
     schema_mismatch: "LLM_BAD_OUTPUT",

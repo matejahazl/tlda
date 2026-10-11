@@ -14,9 +14,6 @@ export * from "./types"
 const PROVIDER_FACTORIES: Record<Env["LLM_PROVIDER"], () => LlmProvider> = {
     mock: () => new MockProvider(),
     gemini: () => new GeminiProvider(env.LLM_API_KEY!, env.LLM_MODEL!),
-    "openai-compatible": () => {
-        throw new Error("The openai-compatible provider is not implemented yet")
-    },
 }
 
 const globalForLlm = globalThis as typeof globalThis & {

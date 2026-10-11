@@ -1,5 +1,5 @@
 import "server-only"
-import { LlmBadOutputError, LlmUnavailableError } from "../errors"
+import { LlmUnavailableError } from "../errors"
 import type { LlmProvider, LlmRequest, LlmResponse } from "../types"
 
 const API_URL = "https://generativelanguage.googleapis.com/v1beta/models" // Gemini REST endpoint
@@ -27,9 +27,7 @@ const RESPONSE_SCHEMA = {
 type GeminiReply = {
     candidates?: {
         content?: { parts?: { text?: string }[] }
-        finishReason?: string
     }[]
-    promptFeedback?: { blockReason?: string }
     usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number }
 }
 
@@ -89,19 +87,14 @@ export class GeminiProvider implements LlmProvider {
                 : new Error(message)
         }
 
-        const reply = (await res.json()) as GeminiReply
+        const raw = await res.text()
+        const reply = JSON.parse(raw) as GeminiReply
         const text = reply.candidates?.[0]?.content?.parts
             ?.map((part) => part.text ?? "")
             .join("")
-        if (!text) {
-            const why =
-                reply.promptFeedback?.blockReason ??
-                reply.candidates?.[0]?.finishReason ??
-                "empty reply"
-            throw new LlmBadOutputError(`Gemini gave no text (${why})`)
-        }
         return {
-            text,
+            // Blocked or empty: pass the raw reply on, so it fails validation and is logged verbatim
+            text: text || raw,
             usage: {
                 inputTokens: reply.usageMetadata?.promptTokenCount,
                 outputTokens: reply.usageMetadata?.candidatesTokenCount,

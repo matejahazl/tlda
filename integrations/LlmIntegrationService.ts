@@ -1,5 +1,5 @@
 import "server-only"
-import { LlmBadOutputError, LlmUnavailableError } from "./errors"
+import { LlmUnavailableError } from "./errors"
 import { parseLlmOutput } from "./parseOutput"
 import { buildUserMessage, SYSTEM_PROMPT } from "./prompt"
 import type {
@@ -10,11 +10,6 @@ import type {
 } from "./types"
 
 const LLM_TIMEOUT_MS = 30_000
-
-const PROVIDER_FAILURES = [
-    { type: LlmUnavailableError, reason: "provider_unavailable" },
-    { type: LlmBadOutputError, reason: "provider_bad_output" },
-] as const
 
 export class LlmIntegrationService {
     constructor(
@@ -56,6 +51,7 @@ function providerFailureReason(
     if (timedOut) {
         return "timeout"
     }
-    const known = PROVIDER_FAILURES.find(({ type }) => error instanceof type)
-    return known?.reason ?? "provider_error"
+    return error instanceof LlmUnavailableError
+        ? "provider_unavailable"
+        : "provider_error"
 }

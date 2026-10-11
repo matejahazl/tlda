@@ -22,13 +22,12 @@ describe("parseEnv", () => {
         expect(message).toContain("LLM_API_KEY")
     })
 
-    it("names LLM_BASE_URL when it is missing for openai-compatible", () => {
+    it("names a missing LLM_MODEL without printing the key", () => {
         const message = messageFor({
-            LLM_PROVIDER: "openai-compatible",
-            LLM_MODEL: "m",
+            LLM_PROVIDER: "gemini",
             LLM_API_KEY: SECRET,
         })
-        expect(message).toContain("LLM_BASE_URL")
+        expect(message).toContain("LLM_MODEL")
         expect(message).not.toContain(SECRET)
     })
 })
