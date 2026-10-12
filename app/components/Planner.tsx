@@ -10,7 +10,6 @@ import { MeetingList } from "./MeetingList"
 
 const PENDING_TITLE_FALLBACK = "New meeting" // shown on the placeholder card when the user typed no title
 
-// Holds the page state: saved meetings and the form. The server only sends the first list.
 export function Planner({ initialMeetings }: { initialMeetings: Meeting[] }) {
     const [savedMeetings, setSavedMeetings] = useState(initialMeetings)
     const [title, setTitle] = useState("")

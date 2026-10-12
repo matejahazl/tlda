@@ -7,7 +7,6 @@ type MeetingCardProps = {
     onSetStatus: (itemId: number, status: ItemStatus) => void
 }
 
-// All text here comes from the user or the LLM, so it is only ever rendered as plain React text
 export function MeetingCard({ meeting, onSetStatus }: MeetingCardProps) {
     const done = countDone(meeting)
     const total = meeting.items.length
