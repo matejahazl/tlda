@@ -16,14 +16,9 @@ const PROVIDER_FACTORIES: Record<Env["LLM_PROVIDER"], () => LlmProvider> = {
     gemini: () => new GeminiProvider(env.LLM_API_KEY!, env.LLM_MODEL!),
 }
 
-const globalForLlm = globalThis as typeof globalThis & {
-    __llm?: LlmIntegrationService
-}
-
-// One service (and one provider client) per process, reused across requests
 export function getLlmIntegrationService(): LlmIntegrationService {
-    return (globalForLlm.__llm ??= new LlmIntegrationService(
-        PROVIDER_FACTORIES[env.LLM_PROVIDER](),
-        { provider: env.LLM_PROVIDER, model: env.LLM_MODEL ?? "mock" },
-    ))
+    return new LlmIntegrationService(PROVIDER_FACTORIES[env.LLM_PROVIDER](), {
+        provider: env.LLM_PROVIDER,
+        model: env.LLM_MODEL ?? "mock",
+    })
 }

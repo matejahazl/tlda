@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { parseEnv } from "@/lib/server/env"
 
-const SECRET = "sk-super-secret-value"
-
 function messageFor(source: Record<string, string | undefined>) {
     try {
         parseEnv(source)
@@ -25,9 +23,9 @@ describe("parseEnv", () => {
     it("names a missing LLM_MODEL without printing the key", () => {
         const message = messageFor({
             LLM_PROVIDER: "gemini",
-            LLM_API_KEY: SECRET,
+            LLM_API_KEY: "sk-super-secret-value",
         })
         expect(message).toContain("LLM_MODEL")
-        expect(message).not.toContain(SECRET)
+        expect(message).not.toContain("sk-super-secret-value")
     })
 })

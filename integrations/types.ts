@@ -19,13 +19,12 @@ export interface LlmProvider {
     ): Promise<LlmResponse>
 }
 
-// A valid title (or undefined) and the deduped items, which may be empty: deciding what that means is the caller's job
 export type Extraction = z.output<typeof llmOutputSchema>
 
 export type FailureReason =
     | "timeout"
     | "provider_unavailable"
-    | "provider_error" // anything else, such as a bad API key
+    | "provider_error"
     | "not_json"
     | "schema_mismatch"
     | "prose"

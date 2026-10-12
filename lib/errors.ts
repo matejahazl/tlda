@@ -1,9 +1,9 @@
 import type { ErrorCode } from "@/types"
 
 type ErrorInfo = {
-    status: number // HTTP status
-    message: string // safe, human-readable text shown to the user
-    level: "warn" | "error" // log level for the completion log
+    status: number
+    message: string
+    level: "warn" | "error"
 }
 
 export const ERROR_TABLE: Record<ErrorCode, ErrorInfo> = {
@@ -15,11 +15,6 @@ export const ERROR_TABLE: Record<ErrorCode, ErrorInfo> = {
     NOT_FOUND: {
         status: 404,
         message: "That item no longer exists.",
-        level: "warn",
-    },
-    PAYLOAD_TOO_LARGE: {
-        status: 413,
-        message: "These notes are too long. Please shorten them and try again.",
         level: "warn",
     },
     NO_ACTION_ITEMS: {
@@ -53,9 +48,9 @@ export const ERROR_TABLE: Record<ErrorCode, ErrorInfo> = {
 }
 
 type AppErrorOptions = {
-    message?: string // overrides the table message
-    fields?: Record<string, string> // field name -> message, for validation errors
-    cause?: unknown // the underlying error, logged but never sent to the client
+    message?: string
+    fields?: Record<string, string>
+    cause?: unknown
 }
 
 export class AppError extends Error {

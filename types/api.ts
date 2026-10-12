@@ -6,7 +6,6 @@ export type ItemStatus = (typeof ITEM_STATUSES)[number]
 export type ErrorCode =
     | "VALIDATION_ERROR"
     | "NOT_FOUND"
-    | "PAYLOAD_TOO_LARGE"
     | "NO_ACTION_ITEMS"
     | "LLM_BAD_OUTPUT"
     | "LLM_UNAVAILABLE"

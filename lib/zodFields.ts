@@ -1,6 +1,5 @@
 import type { z } from "zod"
 
-// One message per field (the first), keyed by the field path.
 export function fieldMessages(
     error: z.ZodError,
     fallbackField = "body",

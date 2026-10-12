@@ -195,13 +195,6 @@ describe("request validation", () => {
         expect(llm).not.toHaveBeenCalled()
         expect(rowCounts()).toEqual({ meetings: 0, items: 0 })
     })
-
-    it("rejects an oversized body with 413", async () => {
-        const res = await postMeeting({ notes: "a".repeat(200 * 1024) })
-        expect(res.status).toBe(413)
-        expect((await res.json()).error.code).toBe("PAYLOAD_TOO_LARGE")
-        expect(rowCounts()).toEqual({ meetings: 0, items: 0 })
-    })
 })
 
 describe("unusable LLM output", () => {

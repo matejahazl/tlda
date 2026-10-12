@@ -14,7 +14,7 @@ export const PATCH = withApi<{ id: string }>(
         const { status } = parseOrThrow(setStatusSchema, await readJson(req))
         ctx.addLogFields({ newStatus: status })
 
-        const item = getMeetingService().setItemStatus(id, status)
+        const item = getMeetingService().updateItemStatus(id, status)
         return { body: item }
     },
 )

@@ -14,14 +14,13 @@ type FailureCode = FailureReason | "no_action_items"
 const FAILURE_CODES: Record<FailureCode, ErrorCode> = {
     timeout: "LLM_TIMEOUT",
     provider_unavailable: "LLM_UNAVAILABLE",
-    provider_error: "INTERNAL", // for example a bad API key: our problem, not the user's
+    provider_error: "INTERNAL",
     not_json: "LLM_BAD_OUTPUT",
     schema_mismatch: "LLM_BAD_OUTPUT",
     prose: "LLM_BAD_OUTPUT",
     no_action_items: "NO_ACTION_ITEMS",
 }
 
-// Only the fields the UI needs: the raw notes are never selected
 const MEETING_COLUMNS = {
     id: meetings.id,
     title: meetings.title,
@@ -69,7 +68,9 @@ export class MeetingService {
 
     async create(input: CreateMeetingInput, log: Logger): Promise<Meeting> {
         const startedAt = performance.now()
+
         const result = await this.llm.extract(input.notes)
+
         const latencyMs = Math.round(performance.now() - startedAt)
 
         const reason: FailureCode | undefined = !result.ok
@@ -134,7 +135,7 @@ export class MeetingService {
         })
     }
 
-    setItemStatus(id: number, status: ItemStatus): ActionItem {
+    updateItemStatus(id: number, status: ItemStatus): ActionItem {
         const item = this.db
             .update(actionItems)
             .set({ status })

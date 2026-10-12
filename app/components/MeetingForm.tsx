@@ -1,7 +1,7 @@
 import type { FormEvent } from "react"
 import type { CreatePhase } from "@/app/hooks"
 import type { ApiError } from "@/app/lib/apiClient"
-import { createMeetingSchema, MAX_NOTES_LENGTH } from "@/lib/schemas"
+import { createMeetingSchema } from "@/lib/schemas"
 import { fieldMessages } from "@/lib/zodFields"
 import { WarningIcon } from "./icons"
 import { Spinner } from "./Spinner"
@@ -50,7 +50,6 @@ export function MeetingForm({
         (notes.trim() ? clientErrors.notes : undefined) ?? serverErrors.notes
     const showBanner =
         error !== null && !(serverErrors.title ?? serverErrors.notes)
-    const isOverLimit = notes.length > MAX_NOTES_LENGTH
 
     const handleSubmit = (event: FormEvent) => {
         event.preventDefault()
@@ -121,16 +120,8 @@ export function MeetingForm({
                         onChange={(event) => onNotesChange(event.target.value)}
                     />
                     {notesError && (
-                        <p
-                            id="notes-hint"
-                            className="flex justify-between gap-[12px] text-sm text-muted"
-                        >
+                        <p id="notes-hint" className="text-sm text-muted">
                             {notesError}
-                            {isOverLimit && (
-                                <span className="text-danger-ink tabular-nums">
-                                    {`${notes.length.toLocaleString("en-US")} / ${MAX_NOTES_LENGTH.toLocaleString("en-US")}`}
-                                </span>
-                            )}
                         </p>
                     )}
                 </div>
