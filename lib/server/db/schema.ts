@@ -1,10 +1,23 @@
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { relations } from "drizzle-orm"
+import {
+    customType,
+    index,
+    integer,
+    sqliteTable,
+    text,
+} from "drizzle-orm/sqlite-core"
 import { ITEM_STATUSES } from "@/lib/schemas"
 
+const isoTimestamp = customType<{ data: string; driverData: number }>({
+    dataType: () => "integer",
+    fromDriver: (ms) => new Date(ms).toISOString(),
+    toDriver: (iso) => new Date(iso).getTime(),
+})
+
 const createdAt = () =>
-    integer("created_at", { mode: "timestamp_ms" })
+    isoTimestamp("created_at")
         .notNull()
-        .$defaultFn(() => new Date())
+        .$defaultFn(() => new Date().toISOString())
 
 export const meetings = sqliteTable("meetings", {
     id: integer("id").primaryKey({ autoIncrement: true }),
@@ -28,3 +41,14 @@ export const actionItems = sqliteTable(
     },
     (table) => [index("action_items_meeting_id_idx").on(table.meetingId)],
 )
+
+export const meetingsRelations = relations(meetings, ({ many }) => ({
+    items: many(actionItems),
+}))
+
+export const actionItemsRelations = relations(actionItems, ({ one }) => ({
+    meeting: one(meetings, {
+        fields: [actionItems.meetingId],
+        references: [meetings.id],
+    }),
+}))

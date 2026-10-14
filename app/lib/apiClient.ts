@@ -4,7 +4,6 @@ import type { ApiErrorBody, ErrorCode } from "@/types"
 type RequestOptions = {
     method?: "GET" | "POST" | "PATCH"
     body?: unknown
-    signal?: AbortSignal
 }
 
 export class ApiError extends Error {
@@ -25,13 +24,12 @@ export class ApiError extends Error {
 
 export async function apiFetch<T>(
     path: string,
-    { method = "GET", body, signal }: RequestOptions = {},
+    { method = "GET", body }: RequestOptions = {},
 ): Promise<T> {
     let response: Response
     try {
         response = await fetch(path, {
             method,
-            signal,
             cache: "no-store",
             headers:
                 body === undefined
@@ -39,10 +37,7 @@ export async function apiFetch<T>(
                     : { "content-type": "application/json" },
             body: body === undefined ? undefined : JSON.stringify(body),
         })
-    } catch (error) {
-        if (signal?.aborted) {
-            throw error // the caller cancelled, not a failure
-        }
+    } catch {
         throw ApiError.internal()
     }
 

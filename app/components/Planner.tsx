@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { useCreateMeeting, useSetItemStatus } from "@/app/hooks"
 import { pluralize, summaryLine } from "@/app/lib/format"
 import { patchItem } from "@/app/lib/meetings"
@@ -16,14 +16,14 @@ export function Planner({ initialMeetings }: { initialMeetings: Meeting[] }) {
     const [notes, setNotes] = useState("")
     const [announcement, setAnnouncement] = useState("")
 
-    const handleCreated = useCallback((meeting: Meeting) => {
+    function handleCreated(meeting: Meeting) {
         setSavedMeetings((current) => [meeting, ...current])
         setTitle("")
         setNotes("")
         setAnnouncement(
             `Added ${meeting.title} with ${pluralize(meeting.items.length, "action item")}.`,
         )
-    }, [])
+    }
     const { phase, error, submit, reset } = useCreateMeeting(handleCreated)
     const { meetings, setItemStatus } = useSetItemStatus(
         savedMeetings,

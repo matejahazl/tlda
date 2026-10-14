@@ -1,5 +1,5 @@
 import "server-only"
-import { asc, desc, eq } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import type { Logger } from "pino"
 import type { FailureReason, LlmIntegrationService } from "@/integrations"
 import { AppError, ERROR_TABLE } from "@/lib/errors"
@@ -45,25 +45,21 @@ export class MeetingService {
     ) {}
 
     list(): Meeting[] {
-        const rows = this.db
-            .select(MEETING_COLUMNS)
-            .from(meetings)
-            .orderBy(desc(meetings.createdAt), desc(meetings.id))
-            .all()
-        const items = this.db
-            .select({ meetingId: actionItems.meetingId, ...ITEM_COLUMNS })
-            .from(actionItems)
-            .orderBy(asc(actionItems.id))
-            .all()
-
-        const byMeeting = new Map<number, ActionItem[]>()
-        for (const { meetingId, ...item } of items) {
-            byMeeting.set(meetingId, [
-                ...(byMeeting.get(meetingId) ?? []),
-                item,
-            ])
-        }
-        return rows.map((row) => toMeeting(row, byMeeting.get(row.id) ?? []))
+        return this.db.query.meetings
+            .findMany({
+                columns: { id: true, title: true, createdAt: true }, // no raw notes
+                with: {
+                    items: {
+                        columns: { id: true, text: true, status: true },
+                        orderBy: (item, { asc }) => asc(item.id),
+                    },
+                },
+                orderBy: (meeting, { desc }) => [
+                    desc(meeting.createdAt),
+                    desc(meeting.id),
+                ],
+            })
+            .sync()
     }
 
     async create(input: CreateMeetingInput, log: Logger): Promise<Meeting> {
@@ -131,7 +127,7 @@ export class MeetingService {
                 )
                 .returning(ITEM_COLUMNS)
                 .all()
-            return toMeeting(meeting, saved)
+            return { ...meeting, items: saved }
         })
     }
 
@@ -146,17 +142,5 @@ export class MeetingService {
             throw new AppError("NOT_FOUND")
         }
         return item
-    }
-}
-
-function toMeeting(
-    row: { id: number; title: string; createdAt: Date },
-    items: ActionItem[],
-): Meeting {
-    return {
-        id: row.id,
-        title: row.title,
-        createdAt: row.createdAt.toISOString(),
-        items,
     }
 }

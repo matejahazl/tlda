@@ -1,4 +1,4 @@
-import type { FormEvent } from "react"
+import type { SubmitEvent } from "react"
 import type { CreatePhase } from "@/app/hooks"
 import type { ApiError } from "@/app/lib/apiClient"
 import { createMeetingSchema } from "@/lib/schemas"
@@ -51,7 +51,7 @@ export function MeetingForm({
     const showBanner =
         error !== null && !(serverErrors.title ?? serverErrors.notes)
 
-    const handleSubmit = (event: FormEvent) => {
+    const handleSubmit = (event: SubmitEvent) => {
         event.preventDefault()
         if (parsed.success && !isProcessing) {
             onSubmit()
