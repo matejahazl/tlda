@@ -14,7 +14,7 @@ export const ERROR_TABLE: Record<ErrorCode, ErrorInfo> = {
     },
     NOT_FOUND: {
         status: 404,
-        message: "That item no longer exists.",
+        message: "Item not found.",
         level: "warn",
     },
     NO_ACTION_ITEMS: {

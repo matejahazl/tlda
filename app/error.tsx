@@ -1,5 +1,7 @@
 "use client"
 
+import { Button } from "@/app/components/Button"
+
 type ErrorPageProps = {
     error: Error & { digest?: string }
     reset: () => void
@@ -12,9 +14,7 @@ export default function ErrorPage({ reset }: ErrorPageProps) {
             <p className="text-muted">
                 Something went wrong on our side. Please try again.
             </p>
-            <button type="button" className="btn-primary" onClick={reset}>
-                Try again
-            </button>
+            <Button onClick={reset}>Try again</Button>
         </main>
     )
 }

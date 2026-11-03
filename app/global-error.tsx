@@ -1,6 +1,7 @@
 "use client"
 
 import "./globals.css"
+import { Button } from "@/app/components/Button"
 
 type GlobalErrorPageProps = {
     error: Error & { digest?: string }
@@ -16,13 +17,7 @@ export default function GlobalError({ reset }: GlobalErrorPageProps) {
                     <p className="text-muted">
                         Something went wrong on our side. Please try again.
                     </p>
-                    <button
-                        type="button"
-                        className="btn-primary"
-                        onClick={reset}
-                    >
-                        Try again
-                    </button>
+                    <Button onClick={reset}>Try again</Button>
                 </main>
             </body>
         </html>

@@ -24,6 +24,12 @@ export function Planner({ initialMeetings }: { initialMeetings: Meeting[] }) {
             `Added ${meeting.title} with ${pluralize(meeting.items.length, "action item")}.`,
         )
     }
+    function handleDeleted(meeting: Meeting) {
+        setSavedMeetings((current) =>
+            current.filter(({ id }) => id !== meeting.id),
+        )
+        setAnnouncement(`Deleted ${meeting.title}.`)
+    }
     const { phase, error, submit, reset } = useCreateMeeting(handleCreated)
     const { meetings, setItemStatus } = useSetItemStatus(
         savedMeetings,
@@ -57,6 +63,7 @@ export function Planner({ initialMeetings }: { initialMeetings: Meeting[] }) {
                             : null
                     }
                     onSetStatus={setItemStatus}
+                    onDeleted={handleDeleted}
                 />
                 <MeetingForm
                     title={title}

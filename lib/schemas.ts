@@ -57,7 +57,7 @@ export const setStatusSchema = z.strictObject({
     status: z.enum(ITEM_STATUSES, { error: "Invalid status" }),
 })
 
-export const itemIdSchema = z
+export const idSchema = z
     .string()
     .regex(/^[1-9]\d*$/, "Invalid id")
     .transform(Number)

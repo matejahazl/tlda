@@ -28,6 +28,7 @@
     --color-done-fill: #2f7d4f;
 
     --color-segment: #ecede8;
+    --color-segment-hover: #e2e4dd;
     --color-track: #e3e5dd;
     --color-skeleton: #e6e8e1;
     --color-strike: #9aa0a6;
@@ -37,6 +38,8 @@
     --color-danger: #fdecea;
     --color-danger-line: #f0b9b3;
     --color-danger-ink: #7a1a13;
+    --color-danger-fill: #b42318;
+    --color-danger-fill-hover: #92190f;
 
     --font-sans: var(--font-geist-sans), system-ui, sans-serif;
     --font-serif: var(--font-instrument-serif), Georgia, serif;
@@ -47,6 +50,8 @@
         0 0 0 1px rgb(22 25 28 / 0.07), 0 1px 3px rgb(22 25 28 / 0.06);
     --shadow-field: inset 0 0 0 1px var(--color-field-line);
     --shadow-danger: inset 0 0 0 1px var(--color-danger-line);
+    --shadow-dialog:
+        0 0 0 1px rgb(22 25 28 / 0.07), 0 24px 48px rgb(22 25 28 / 0.22);
 
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
@@ -55,6 +60,8 @@
     --animate-pulse-soft: pulse-soft 1.2s ease-in-out infinite;
     --animate-enter: enter 300ms var(--ease-out) both;
     --animate-fade: fade 200ms ease both;
+    --animate-leave: leave 200ms var(--ease-out) both;
+    --animate-pop: pop 200ms var(--ease-out);
 }
 
 @keyframes spin-fast {
@@ -82,13 +89,36 @@
     }
 }
 
+@keyframes leave {
+    to {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+}
+
+@keyframes pop {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(4px);
+    }
+}
+
 @layer base {
     html {
-        @apply h-full scroll-smooth scheme-light;
+        @apply h-full scroll-smooth scheme-light [scrollbar-gutter:stable]; /* no layout shift when the scrollbar is hidden */
+    }
+
+    /* lock the page behind an open modal dialog */
+    body:has(dialog[open]) {
+        @apply overflow-hidden;
     }
 
     body {
         @apply bg-bg font-sans text-ink;
+    }
+
+    button:not(:disabled) {
+        @apply cursor-pointer;
     }
 
     :focus-visible {
@@ -111,6 +141,10 @@
 
     .text-heading {
         @apply font-serif text-[28px] leading-[1.15];
+    }
+
+    .text-button {
+        @apply text-[15px] leading-[22px] font-semibold;
     }
 
     .text-meta {

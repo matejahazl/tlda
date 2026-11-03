@@ -2,7 +2,7 @@ import { ERROR_TABLE } from "@/lib/errors"
 import type { ApiErrorBody, ErrorCode } from "@/types"
 
 type RequestOptions = {
-    method?: "GET" | "POST" | "PATCH"
+    method?: "GET" | "POST" | "PATCH" | "DELETE"
     body?: unknown
 }
 
@@ -43,6 +43,9 @@ export async function apiFetch<T>(
 
     if (!response.ok) {
         throw await readError(response)
+    }
+    if (response.status === 204) {
+        return undefined as T // no body to parse
     }
     try {
         return (await response.json()) as T

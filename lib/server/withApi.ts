@@ -7,7 +7,7 @@ import type { ApiErrorBody } from "@/types"
 
 const REQUEST_ID_PATTERN = /^[\w.-]{1,64}$/
 
-export type ApiResult = { status?: number; body: unknown }
+export type ApiResult = { status?: number; body?: unknown }
 
 export type ApiContext<P> = {
     log: Logger
@@ -74,10 +74,10 @@ export function withApi<
             },
             "request completed",
         )
-        return Response.json(done.body, {
-            status: done.status,
-            headers: { "x-request-id": requestId },
-        })
+        const headers = { "x-request-id": requestId }
+        return done.status === 204
+            ? new Response(null, { status: 204, headers })
+            : Response.json(done.body, { status: done.status, headers })
     }
 }
 

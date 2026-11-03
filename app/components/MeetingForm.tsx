@@ -3,8 +3,8 @@ import type { CreatePhase } from "@/app/hooks"
 import type { ApiError } from "@/app/lib/apiClient"
 import { createMeetingSchema } from "@/lib/schemas"
 import { fieldMessages } from "@/lib/zodFields"
+import { Button } from "./Button"
 import { WarningIcon } from "./icons"
-import { Spinner } from "./Spinner"
 
 const SUBMIT_LABELS: Record<CreatePhase, string> = {
     idle: "Extract action items",
@@ -119,15 +119,13 @@ export function MeetingForm({
 
                 {showBanner && <ErrorBanner message={error.message} />}
 
-                <button
+                <Button
                     type="submit"
-                    className="btn-primary"
-                    disabled={!parsed.success || isProcessing}
-                    aria-busy={isProcessing}
+                    disabled={!parsed.success}
+                    pending={isProcessing}
                 >
-                    {isProcessing && <Spinner tone="light" />}
                     {SUBMIT_LABELS[phase]}
-                </button>
+                </Button>
 
                 <p aria-live="polite" className="min-h-[21px] text-meta">
                     {PHASE_MESSAGES[phase] ?? announcement}

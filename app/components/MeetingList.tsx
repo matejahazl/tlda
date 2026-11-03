@@ -6,12 +6,14 @@ type MeetingListProps = {
     meetings: Meeting[]
     pendingTitle: string | null
     onSetStatus: (itemId: number, status: ItemStatus) => void
+    onDeleted: (meeting: Meeting) => void
 }
 
 export function MeetingList({
     meetings,
     pendingTitle,
     onSetStatus,
+    onDeleted,
 }: MeetingListProps) {
     return (
         <section
@@ -24,6 +26,7 @@ export function MeetingList({
                     key={meeting.id}
                     meeting={meeting}
                     onSetStatus={onSetStatus}
+                    onDeleted={onDeleted}
                 />
             ))}
             {meetings.length === 0 && pendingTitle === null && (

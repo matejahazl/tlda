@@ -134,6 +134,18 @@ export class MeetingService {
         })
     }
 
+    deleteMeeting(id: number): void {
+        const deleted = this.db
+            .delete(meetings)
+            .where(eq(meetings.id, id))
+            .returning({ id: meetings.id })
+            .get()
+
+        if (!deleted) {
+            throw new AppError("NOT_FOUND")
+        }
+    }
+
     updateItemStatus(id: number, status: ItemStatus): ActionItem {
         const item = this.db
             .update(actionItems)
@@ -141,6 +153,7 @@ export class MeetingService {
             .where(eq(actionItems.id, id))
             .returning(ITEM_COLUMNS)
             .get()
+
         if (!item) {
             throw new AppError("NOT_FOUND")
         }

@@ -9,6 +9,7 @@ import { actionItems, meetings } from "@/lib/server/db/schema"
 import type * as LoggerModule from "@/lib/server/logger"
 import { MeetingService } from "@/services/MeetingService"
 import { PATCH } from "../app/api/action-items/[id]/route"
+import { DELETE } from "../app/api/meetings/[id]/route"
 import { GET, POST } from "../app/api/meetings/route"
 
 type Handler = ConstructorParameters<typeof MockProvider>[0]
@@ -63,6 +64,16 @@ const patchItem = (id: string, body: unknown) =>
     PATCH(json(`/api/action-items/${id}`, "PATCH", body), {
         params: Promise.resolve({ id }),
     })
+
+const deleteMeeting = (id: string) =>
+    DELETE(
+        new Request(`http://localhost/api/meetings/${id}`, {
+            method: "DELETE",
+        }),
+        {
+            params: Promise.resolve({ id }),
+        },
+    )
 
 function rowCounts() {
     return {
@@ -327,9 +338,7 @@ describe("PATCH /action-items/:id", () => {
     it("returns 404 for a missing item and logs the id", async () => {
         const res = await patchItem("999", { status: "done" })
         expect(res.status).toBe(404)
-        expect((await res.json()).error.message).toBe(
-            "That item no longer exists.",
-        )
+        expect((await res.json()).error.message).toBe("Item not found.")
         expect(find("request completed")).toMatchObject({
             level: 40,
             route: "/api/action-items/:id",
@@ -337,5 +346,32 @@ describe("PATCH /action-items/:id", () => {
             itemId: 999,
             status: 404,
         })
+    })
+})
+
+describe("DELETE /api/meetings/:id", () => {
+    it("deletes the meeting and its items", async () => {
+        const meeting = await (await postMeeting({ notes: NOTES })).json()
+        expect(rowCounts()).toEqual({ meetings: 1, items: 2 })
+
+        const res = await deleteMeeting(String(meeting.id))
+
+        expect(res.status).toBe(204)
+        expect(await res.text()).toBe("")
+        expect(rowCounts()).toEqual({ meetings: 0, items: 0 })
+    })
+
+    it("returns 404 for a missing meeting", async () => {
+        const res = await deleteMeeting("999")
+
+        expect(res.status).toBe(404)
+        expect((await res.json()).error.code).toBe("NOT_FOUND")
+    })
+
+    it("returns 400 for an invalid id", async () => {
+        const res = await deleteMeeting("abc")
+
+        expect(res.status).toBe(400)
+        expect((await res.json()).error.code).toBe("VALIDATION_ERROR")
     })
 })
