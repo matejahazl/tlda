@@ -75,6 +75,7 @@ export class MeetingService {
               ? "no_action_items"
               : undefined
         const level = reason ? ERROR_TABLE[FAILURE_CODES[reason]].level : "info"
+        const logRawText = Boolean(reason) || log.isLevelEnabled("debug")
 
         log[level](
             {
@@ -82,8 +83,10 @@ export class MeetingService {
                 ...this.llm.info,
                 outcome: reason ? "error" : "success",
                 reason,
-                rawNotes: input.rawNotes,
-                llmResponse: result.response?.text ?? null,
+                ...(logRawText && {
+                    rawNotes: input.rawNotes,
+                    llmResponse: result.response?.text ?? null,
+                }),
                 inputTokens: result.response?.usage?.inputTokens,
                 outputTokens: result.response?.usage?.outputTokens,
                 latencyMs,

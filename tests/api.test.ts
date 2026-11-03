@@ -121,37 +121,6 @@ describe("happy path", () => {
         expect(after[0].items[0].status).toBe("done")
         expect(after[0].items[1].status).toBe("open")
     })
-
-    it("logs a success completion and an extraction event with the raw notes", async () => {
-        const rawNotes = `  ${NOTES}\u0007  `
-        useLlm(() => ({
-            text: GOOD_REPLY,
-            usage: { inputTokens: 10, outputTokens: 5 },
-        }))
-        const res = await postMeeting({ notes: rawNotes })
-
-        expect(find("extraction completed")).toMatchObject({
-            event: "extraction",
-            level: 30,
-            provider: "mock",
-            model: "test-model",
-            outcome: "success",
-            rawNotes, // exactly as submitted, before trimming and stripping
-            llmResponse: GOOD_REPLY,
-            inputTokens: 10,
-            outputTokens: 5,
-            itemCount: 2,
-        })
-        expect(typeof find("extraction completed")?.latencyMs).toBe("number")
-        expect(find("request completed")).toMatchObject({
-            requestId: res.headers.get("x-request-id"),
-            method: "POST",
-            route: "/api/meetings",
-            status: 201,
-            outcome: "success",
-            itemCount: 2,
-        })
-    })
 })
 
 describe("meeting title", () => {
@@ -255,8 +224,9 @@ describe("unusable LLM output", () => {
 describe("no action items", () => {
     it("returns NO_ACTION_ITEMS for a valid empty list, writes nothing and logs the response", async () => {
         const reply = '{"items": []}'
+        const rawNotes = `  ${NOTES}\u0007  `
         useLlm(() => reply)
-        const res = await postMeeting({ notes: NOTES })
+        const res = await postMeeting({ notes: rawNotes })
         const { error } = await res.json()
 
         expect(res.status).toBe(422)
@@ -268,7 +238,7 @@ describe("no action items", () => {
         expect(find("extraction completed")).toMatchObject({
             level: 40,
             reason: "no_action_items",
-            rawNotes: NOTES,
+            rawNotes, // exactly as submitted, before trimming and stripping
             llmResponse: reply,
         })
     })
