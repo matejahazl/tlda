@@ -51,7 +51,7 @@ export function StatusButtons({
                         type="button"
                         aria-pressed={isSelected}
                         onClick={() => !isSelected && onChange(option.value)}
-                        className={`inline-flex min-h-[40px] touch-manipulation items-center gap-[6px] whitespace-nowrap rounded-[10px] px-[12px] text-sm font-medium transition duration-160 ease-out motion-safe:active:scale-97 ${
+                        className={`text-label inline-flex min-h-[40px] touch-manipulation items-center gap-[6px] whitespace-nowrap rounded-[10px] px-[12px] transition duration-160 ease-out motion-safe:active:scale-97 ${
                             isSelected
                                 ? option.selected
                                 : "cursor-pointer text-muted hover-fine:text-ink"

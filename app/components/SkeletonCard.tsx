@@ -12,7 +12,7 @@ export function SkeletonCard({ title }: { title: string }) {
                 <Spinner tone="dark" />
                 <div className="flex min-w-0 flex-col">
                     <h2 className="wrap-anywhere">{title}</h2>
-                    <p className="text-sm text-muted">
+                    <p className="text-meta">
                         Extracting action items from your notes…
                     </p>
                 </div>

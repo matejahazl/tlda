@@ -67,21 +67,15 @@ export function MeetingForm({
             <form onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
                 <div className="flex flex-col gap-[4px]">
                     <h2 className="text-heading">New meeting notes</h2>
-                    <p className="text-sm text-pretty text-muted">
+                    <p className="text-meta text-pretty">
                         Paste your notes as they are. Action items are pulled
                         out for you.
                     </p>
                 </div>
 
                 <div className="flex flex-col gap-[6px]">
-                    <label
-                        htmlFor="meeting-title"
-                        className="text-sm font-medium"
-                    >
-                        Title{" "}
-                        <span className="font-normal text-muted">
-                            (optional)
-                        </span>
+                    <label htmlFor="meeting-title" className="text-label">
+                        Title <span className="text-meta">(optional)</span>
                     </label>
                     <input
                         id="meeting-title"
@@ -96,17 +90,14 @@ export function MeetingForm({
                         onChange={(event) => onTitleChange(event.target.value)}
                     />
                     {titleError && (
-                        <p id="title-hint" className="text-sm text-muted">
+                        <p id="title-hint" className="text-meta">
                             {titleError}
                         </p>
                     )}
                 </div>
 
                 <div className="flex flex-col gap-[6px]">
-                    <label
-                        htmlFor="meeting-notes"
-                        className="text-sm font-medium"
-                    >
+                    <label htmlFor="meeting-notes" className="text-label">
                         Notes
                     </label>
                     <textarea
@@ -120,7 +111,7 @@ export function MeetingForm({
                         onChange={(event) => onNotesChange(event.target.value)}
                     />
                     {notesError && (
-                        <p id="notes-hint" className="text-sm text-muted">
+                        <p id="notes-hint" className="text-meta">
                             {notesError}
                         </p>
                     )}
@@ -138,10 +129,7 @@ export function MeetingForm({
                     {SUBMIT_LABELS[phase]}
                 </button>
 
-                <p
-                    aria-live="polite"
-                    className="min-h-[21px] text-sm text-muted"
-                >
+                <p aria-live="polite" className="min-h-[21px] text-meta">
                     {PHASE_MESSAGES[phase] ?? announcement}
                 </p>
             </form>
@@ -160,7 +148,7 @@ function ErrorBanner({ message }: { message: string }) {
                 <strong className="font-semibold">
                     Couldn&apos;t extract action items
                 </strong>
-                <span className="text-sm text-pretty">
+                <span className="text-meta text-pretty text-danger-ink">
                     {message} Your notes are still here.
                 </span>
             </div>

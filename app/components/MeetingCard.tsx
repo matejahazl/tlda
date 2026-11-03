@@ -18,14 +18,14 @@ export function MeetingCard({ meeting, onSetStatus }: MeetingCardProps) {
                     <h2 className="wrap-anywhere">{meeting.title}</h2>
                     <time
                         dateTime={meeting.createdAt}
-                        suppressHydrationWarning // server and browser time zones can differ
-                        className="text-sm text-muted"
+                        suppressHydrationWarning // if client and server tz differs
+                        className="text-meta"
                     >
                         {formatDate(meeting.createdAt)}
                     </time>
                 </div>
                 <div className="flex items-center gap-[12px]">
-                    <span className="text-sm text-muted tabular-nums">
+                    <span className="text-meta tabular-nums">
                         {`${done} of ${total} done`}
                     </span>
                     <ProgressBar ratio={total ? done / total : 0} />
@@ -58,7 +58,6 @@ export function MeetingCard({ meeting, onSetStatus }: MeetingCardProps) {
     )
 }
 
-// Decorative: the "X of Y done" text carries the meaning
 function ProgressBar({ ratio }: { ratio: number }) {
     return (
         <div

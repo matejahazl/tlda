@@ -113,14 +113,22 @@
         @apply font-serif text-[28px] leading-[1.15];
     }
 
+    .text-meta {
+        @apply text-[14px] leading-[20px] text-muted;
+    }
+
+    .text-label {
+        @apply text-[14px] leading-[20px] font-medium;
+    }
+
     .btn-primary {
         @apply inline-flex min-h-[48px] touch-manipulation items-center justify-center gap-[10px] rounded-[12px] bg-accent px-[20px] text-on-accent no-underline transition duration-160 ease-out;
-        @apply text-[15px] leading-normal font-semibold;
+        @apply text-[15px] leading-[22px] font-semibold;
         @apply motion-safe:not-disabled:active:scale-97 hover-fine:not-disabled:not-aria-busy:bg-accent-hover;
         @apply disabled:not-aria-busy:cursor-not-allowed disabled:not-aria-busy:opacity-50 aria-busy:cursor-progress;
     }
 
     .field {
-        @apply block w-full rounded-[12px] bg-card px-[14px] py-[12px] text-base text-ink shadow-field placeholder:text-placeholder read-only:bg-readonly read-only:text-muted;
+        @apply block w-full rounded-[12px] bg-card px-[14px] py-[12px] text-[16px] leading-[24px] text-ink shadow-field placeholder:text-placeholder read-only:bg-readonly read-only:text-muted;
     }
 }
