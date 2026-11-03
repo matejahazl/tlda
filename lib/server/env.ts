@@ -13,6 +13,7 @@ const envSchema = z
         LLM_MODEL: optionalString,
         LLM_API_KEY: optionalString,
         LOG_LEVEL: z.enum(LOG_LEVELS).default("info"),
+        DB_PATH: z.string().default("data/tlda.db"),
     })
     .superRefine((value, ctx) => {
         if (value.LLM_PROVIDER === "mock") {

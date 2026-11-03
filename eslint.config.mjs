@@ -68,6 +68,8 @@ const eslintConfig = defineConfig([
         "build/**",
         "next-env.d.ts",
         ".prettierrc.cjs",
+        "test-results/**",
+        "playwright-report/**",
     ]),
 ])
 
