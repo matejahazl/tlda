@@ -15,7 +15,7 @@ export function useCreateMeeting(onCreated: (meeting: Meeting) => void) {
         setPhase("processing")
         setError(null)
         try {
-            const meeting = await apiFetch<Meeting>("/notes/extract", {
+            const meeting = await apiFetch<Meeting>("/api/meetings", {
                 method: "POST",
                 body,
             })

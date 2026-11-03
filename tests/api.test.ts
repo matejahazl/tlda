@@ -8,9 +8,8 @@ import { createDb, type Db } from "@/lib/server/db"
 import { actionItems, meetings } from "@/lib/server/db/schema"
 import type * as LoggerModule from "@/lib/server/logger"
 import { MeetingService } from "@/services/MeetingService"
-import { PATCH } from "../app/action-items/[id]/route"
-import { GET } from "../app/meetings/route"
-import { POST } from "../app/notes/extract/route"
+import { PATCH } from "../app/api/action-items/[id]/route"
+import { GET, POST } from "../app/api/meetings/route"
 
 type Handler = ConstructorParameters<typeof MockProvider>[0]
 
@@ -58,11 +57,10 @@ function json(url: string, method: string, body: unknown, headers = {}) {
     })
 }
 
-const postMeeting = (body: unknown) =>
-    POST(json("/notes/extract", "POST", body))
+const postMeeting = (body: unknown) => POST(json("/api/meetings", "POST", body))
 
 const patchItem = (id: string, body: unknown) =>
-    PATCH(json(`/action-items/${id}`, "PATCH", body), {
+    PATCH(json(`/api/action-items/${id}`, "PATCH", body), {
         params: Promise.resolve({ id }),
     })
 
@@ -100,7 +98,7 @@ describe("happy path", () => {
         expect(meeting).not.toHaveProperty("notes")
 
         const list = await (
-            await GET(new Request("http://localhost/meetings"))
+            await GET(new Request("http://localhost/api/meetings"))
         ).json()
         expect(list).toHaveLength(1)
         expect(list[0]).not.toHaveProperty("notes")
@@ -118,7 +116,7 @@ describe("happy path", () => {
         })
 
         const after = await (
-            await GET(new Request("http://localhost/meetings"))
+            await GET(new Request("http://localhost/api/meetings"))
         ).json()
         expect(after[0].items[0].status).toBe("done")
         expect(after[0].items[1].status).toBe("open")
@@ -148,7 +146,7 @@ describe("happy path", () => {
         expect(find("request completed")).toMatchObject({
             requestId: res.headers.get("x-request-id"),
             method: "POST",
-            route: "/notes/extract",
+            route: "/api/meetings",
             status: 201,
             outcome: "success",
             itemCount: 2,
@@ -364,7 +362,7 @@ describe("PATCH /action-items/:id", () => {
         )
         expect(find("request completed")).toMatchObject({
             level: 40,
-            route: "/action-items/:id",
+            route: "/api/action-items/:id",
             errorCode: "NOT_FOUND",
             itemId: 999,
             status: 404,

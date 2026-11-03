@@ -22,7 +22,7 @@ export function useSetItemStatus(
             applyChange({ itemId, status })
             try {
                 onSaved(
-                    await apiFetch<ActionItem>(`/action-items/${itemId}`, {
+                    await apiFetch<ActionItem>(`/api/action-items/${itemId}`, {
                         method: "PATCH",
                         body: { status },
                     }),
