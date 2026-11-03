@@ -1,7 +1,7 @@
 "use client"
 
 import "./globals.css"
-import { Button } from "@/app/components/Button"
+import { Button } from "@/app/components/ui/Button"
 
 type GlobalErrorPageProps = {
     error: Error & { digest?: string }

@@ -1,4 +1,4 @@
-import { Spinner } from "./Spinner"
+import { Spinner } from "./ui"
 
 const SKELETON_WIDTHS = ["w-3/5", "w-1/2", "w-7/12"] // one per placeholder row
 

@@ -1,10 +1,9 @@
 import { useState } from "react"
 import { countDone, formatDate } from "@/app/lib/format"
 import type { ItemStatus, Meeting } from "@/types"
-import { Button } from "./Button"
 import { DeleteMeetingDialog } from "./dialogs"
 import { TrashIcon } from "./icons"
-import { StatusButtons } from "./StatusButtons"
+import { Button, StatusButtons } from "./ui"
 
 const LEAVE_DURATION_MS = 200 // matches the leave animation
 
@@ -83,7 +82,7 @@ export function MeetingCard({
                             </span>
                             <StatusButtons
                                 status={item.status}
-                                itemText={item.text}
+                                label={`Status: ${item.text}`}
                                 onChange={(status) =>
                                     onSetStatus(item.id, status)
                                 }

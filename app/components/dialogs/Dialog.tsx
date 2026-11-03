@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef } from "react"
-import { Button } from "../Button"
 import { WarningIcon } from "../icons"
+import { Button } from "../ui"
 
 export type DialogProps = {
     open: boolean

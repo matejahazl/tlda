@@ -1,6 +1,6 @@
 import type { ComponentType } from "react"
 import type { ItemStatus } from "@/types"
-import { DoneIcon, InProgressIcon, OpenIcon } from "./icons"
+import { DoneIcon, InProgressIcon, OpenIcon } from "../icons"
 
 const STATUS_OPTIONS: {
     value: ItemStatus
@@ -27,19 +27,15 @@ const STATUS_ICONS: Record<
 
 type StatusButtonsProps = {
     status: ItemStatus
-    itemText: string
+    label: string
     onChange: (status: ItemStatus) => void
 }
 
-export function StatusButtons({
-    status,
-    itemText,
-    onChange,
-}: StatusButtonsProps) {
+export function StatusButtons({ status, label, onChange }: StatusButtonsProps) {
     return (
         <div
             role="group"
-            aria-label={`Status: ${itemText}`}
+            aria-label={label}
             className="inline-flex gap-[2px] rounded-[12px] bg-segment p-[2px]"
         >
             {STATUS_OPTIONS.map((option) => {

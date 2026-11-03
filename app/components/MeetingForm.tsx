@@ -3,8 +3,8 @@ import type { CreatePhase } from "@/app/hooks"
 import type { ApiError } from "@/app/lib/apiClient"
 import { createMeetingSchema } from "@/lib/schemas"
 import { fieldMessages } from "@/lib/zodFields"
-import { Button } from "./Button"
 import { WarningIcon } from "./icons"
+import { Button, Textarea, TextInput } from "./ui"
 
 const SUBMIT_LABELS: Record<CreatePhase, string> = {
     idle: "Extract action items",
@@ -73,49 +73,30 @@ export function MeetingForm({
                     </p>
                 </div>
 
-                <div className="flex flex-col gap-[6px]">
-                    <label htmlFor="meeting-title" className="text-label">
-                        Title <span className="text-meta">(optional)</span>
-                    </label>
-                    <input
-                        id="meeting-title"
-                        type="text"
-                        className="field"
-                        placeholder="Weekly product sync"
-                        autoComplete="off"
-                        value={title}
-                        readOnly={isProcessing}
-                        aria-invalid={Boolean(titleError)}
-                        aria-describedby={titleError ? "title-hint" : undefined}
-                        onChange={(event) => onTitleChange(event.target.value)}
-                    />
-                    {titleError && (
-                        <p id="title-hint" className="text-meta">
-                            {titleError}
-                        </p>
-                    )}
-                </div>
+                <TextInput
+                    id="meeting-title"
+                    label={
+                        <>
+                            Title <span className="text-meta">(optional)</span>
+                        </>
+                    }
+                    placeholder="Weekly product sync"
+                    autoComplete="off"
+                    value={title}
+                    readOnly={isProcessing}
+                    error={titleError}
+                    onChange={(event) => onTitleChange(event.target.value)}
+                />
 
-                <div className="flex flex-col gap-[6px]">
-                    <label htmlFor="meeting-notes" className="text-label">
-                        Notes
-                    </label>
-                    <textarea
-                        id="meeting-notes"
-                        className="field min-h-[240px] resize-y"
-                        placeholder="Paste or type meeting notes…"
-                        value={notes}
-                        readOnly={isProcessing}
-                        aria-invalid={Boolean(notesError)}
-                        aria-describedby={notesError ? "notes-hint" : undefined}
-                        onChange={(event) => onNotesChange(event.target.value)}
-                    />
-                    {notesError && (
-                        <p id="notes-hint" className="text-meta">
-                            {notesError}
-                        </p>
-                    )}
-                </div>
+                <Textarea
+                    id="meeting-notes"
+                    label="Notes"
+                    placeholder="Paste or type meeting notes…"
+                    value={notes}
+                    readOnly={isProcessing}
+                    error={notesError}
+                    onChange={(event) => onNotesChange(event.target.value)}
+                />
 
                 {showBanner && <ErrorBanner message={error.message} />}
 
