@@ -2,16 +2,16 @@ import { Spinner } from "./ui"
 
 const SKELETON_WIDTHS = ["w-3/5", "w-1/2", "w-7/12"] // one per placeholder row
 
-export function SkeletonCard({ title }: { title: string }) {
+export function SkeletonCard() {
     return (
         <article
             aria-busy="true"
             className="overflow-hidden rounded-[16px] bg-card shadow-card motion-safe:animate-enter motion-reduce:animate-fade"
         >
             <div className="flex items-center gap-[14px] px-[24px] py-[20px]">
-                <Spinner tone="dark" />
+                <Spinner tone="dark" size="md" />
                 <div className="flex min-w-0 flex-col">
-                    <h2 className="wrap-anywhere">{title}</h2>
+                    <h2>New meeting</h2>
                     <p className="text-meta">
                         Extracting action items from your notes…
                     </p>

@@ -2,24 +2,20 @@
 
 import { useState } from "react"
 import { useCreateMeeting, useSetItemStatus } from "@/app/hooks"
-import { pluralize, summaryLine } from "@/app/lib/format"
+import { pluralize } from "@/app/lib/format"
 import { patchItem } from "@/app/lib/meetings"
-import type { Meeting } from "@/types"
+import type { Meeting, PaginatedMeetings } from "@/types"
 import { MeetingForm } from "./MeetingForm"
 import { MeetingList } from "./MeetingList"
 
-const PENDING_TITLE_FALLBACK = "New meeting" // shown on the placeholder card when the user typed no title
+export function Planner({ initialPage }: { initialPage: PaginatedMeetings }) {
+    const [savedMeetings, setSavedMeetings] = useState(initialPage.meetings)
+    const [nextCursor, setNextCursor] = useState(initialPage.nextCursor)
 
-export function Planner({ initialMeetings }: { initialMeetings: Meeting[] }) {
-    const [savedMeetings, setSavedMeetings] = useState(initialMeetings)
-    const [title, setTitle] = useState("")
-    const [notes, setNotes] = useState("")
     const [announcement, setAnnouncement] = useState("")
 
     function handleCreated(meeting: Meeting) {
         setSavedMeetings((current) => [meeting, ...current])
-        setTitle("")
-        setNotes("")
         setAnnouncement(
             `Added ${meeting.title} with ${pluralize(meeting.items.length, "action item")}.`,
         )
@@ -29,6 +25,14 @@ export function Planner({ initialMeetings }: { initialMeetings: Meeting[] }) {
             current.filter(({ id }) => id !== meeting.id),
         )
         setAnnouncement(`Deleted ${meeting.title}.`)
+    }
+    function handleLoaded(page: PaginatedMeetings) {
+        setSavedMeetings((current) => [...current, ...page.meetings])
+        setNextCursor(page.nextCursor)
+        // the running count makes each message differ, so repeats are announced again
+        setAnnouncement(
+            `Loaded ${pluralize(page.meetings.length, "more meeting")}, ${savedMeetings.length + page.meetings.length} meetings now shown.`,
+        )
     }
     const { phase, error, submit, reset } = useCreateMeeting(handleCreated)
     const { meetings, setItemStatus } = useSetItemStatus(
@@ -48,7 +52,6 @@ export function Planner({ initialMeetings }: { initialMeetings: Meeting[] }) {
                     <p className="pt-[6px]">
                         Paste your meeting notes and get the to-dos.
                     </p>
-                    <p className="text-muted">{summaryLine(meetings)}</p>
                 </div>
                 <a className="btn-primary lg:hidden" href="#meeting-form">
                     New meeting notes
@@ -57,31 +60,20 @@ export function Planner({ initialMeetings }: { initialMeetings: Meeting[] }) {
             <main className="mx-auto flex max-w-page flex-wrap items-start gap-[32px] px-[32px] pb-[72px]">
                 <MeetingList
                     meetings={meetings}
-                    pendingTitle={
-                        phase === "processing"
-                            ? title.trim() || PENDING_TITLE_FALLBACK
-                            : null
-                    }
+                    isExtracting={phase === "processing"}
                     onSetStatus={setItemStatus}
                     onDeleted={handleDeleted}
+                    nextCursor={nextCursor}
+                    onLoaded={handleLoaded}
                 />
                 <MeetingForm
-                    title={title}
-                    notes={notes}
                     phase={phase}
                     error={error}
                     announcement={announcement}
-                    onTitleChange={(value) => {
-                        setTitle(value)
-                        reset()
-                    }}
-                    onNotesChange={(value) => {
-                        setNotes(value)
-                        reset()
-                    }}
-                    onSubmit={() => {
+                    onEdit={reset}
+                    onSubmit={(body) => {
                         setAnnouncement("")
-                        void submit({ title, notes })
+                        return submit(body)
                     }}
                 />
             </main>

@@ -40,8 +40,7 @@ Things deliberately left out of the first version because they are out of scope 
 ## Data and consistency
 - **Duplicate submissions.** The UI disables the button, but the server has no idempotency key, so a double click, a retry or two tabs can create duplicate meetings.
   - Real fix: client-generated idempotency key stored with the meeting.
-- **No pagination or limit on `GET /api/meetings`.** The list grows without bound.
-  - Real fix: cursor pagination and a "load more" control.
+- **Meeting list pagination is keyset by id, with no total cap.** `GET /api/meetings?cursor=<nextCursor>` returns 5 meetings and the `nextCursor` for the following page (null on the last). There is no total count, so the UI shows no "X of Y".
 - **No edit of meetings or items, and no delete of single items.** There is no way to correct a wrong extraction (edit text, add a missed item, remove a bad one). Only whole meetings can be deleted.
 - **Deleting a meeting is permanent.** No undo, soft delete or trash. The confirm dialog is the only safeguard.
 - **No concurrent-edit protection** on status changes (last write wins).
@@ -77,7 +76,7 @@ Useful, but not asked for, so deliberately not built. Anything here is a separat
 - Edit, add and delete action items; rename a meeting; undo a delete.
 - Search, filter (by status) and sort across meetings.
 - Due dates, priorities, assignees linked to real people, reminders.
-- Pagination or infinite scroll for the meeting list.
+- Infinite scroll for the meeting list (a Load more button exists).
 - Re-run extraction on a saved meeting, or compare results across models.
 - Export (CSV, Markdown) or sharing a meeting by link.
 - Realtime updates when several people use the app, and comments on items.

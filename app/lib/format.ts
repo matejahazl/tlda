@@ -17,14 +17,3 @@ export function countDone(meeting: Meeting): number {
 export function pluralize(count: number, noun: string): string {
     return `${count} ${noun}${count === 1 ? "" : "s"}`
 }
-
-export function summaryLine(meetings: Meeting[]): string {
-    if (meetings.length === 0) {
-        return "Nothing tracked yet"
-    }
-    const open = meetings.reduce(
-        (sum, meeting) => sum + meeting.items.length - countDone(meeting),
-        0,
-    )
-    return `${pluralize(meetings.length, "meeting")} · ${pluralize(open, "open item")}`
-}

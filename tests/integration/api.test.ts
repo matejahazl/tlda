@@ -108,7 +108,7 @@ describe("happy path", () => {
         ])
         expect(meeting).not.toHaveProperty("notes")
 
-        const list = await (
+        const { meetings: list } = await (
             await GET(new Request("http://localhost/api/meetings"))
         ).json()
         expect(list).toHaveLength(1)
@@ -126,7 +126,7 @@ describe("happy path", () => {
             status: "done",
         })
 
-        const after = await (
+        const { meetings: after } = await (
             await GET(new Request("http://localhost/api/meetings"))
         ).json()
         expect(after[0].items[0].status).toBe("done")
@@ -317,6 +317,42 @@ describe("provider failures", () => {
             rawNotes: NOTES,
             llmResponse: null,
         })
+    })
+})
+
+describe("GET /api/meetings pagination", () => {
+    const getPage = async (query = "") =>
+        GET(new Request(`http://localhost/api/meetings${query}`))
+
+    it("pages newest first and a next cursor until the last page", async () => {
+        const created = []
+        for (let i = 0; i < 7; i++) {
+            created.push(await (await postMeeting({ notes: NOTES })).json())
+        }
+        await patchItem(String(created[0].items[0].id), { status: "done" })
+        const ids = created.map((m) => m.id).reverse()
+
+        const first = await (await getPage()).json()
+        expect(first.meetings.map((m: { id: number }) => m.id)).toEqual(
+            ids.slice(0, 5),
+        )
+        expect(first.nextCursor).toBe(ids[4])
+
+        const second = await (
+            await getPage(`?cursor=${first.nextCursor}`)
+        ).json()
+        expect(second.meetings.map((m: { id: number }) => m.id)).toEqual(
+            ids.slice(5),
+        )
+        expect(second.nextCursor).toBeNull()
+    })
+
+    it("rejects a bad cursor and unknown query params", async () => {
+        for (const query of ["?cursor=abc", "?cursor=0", "?page=2"]) {
+            const res = await getPage(query)
+            expect(res.status).toBe(400)
+            expect((await res.json()).error.code).toBe("VALIDATION_ERROR")
+        }
     })
 })
 

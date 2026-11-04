@@ -8,9 +8,10 @@ export function useCreateMeeting(onCreated: (meeting: Meeting) => void) {
     const [phase, setPhase] = useState<CreatePhase>("idle")
     const [error, setError] = useState<ApiError | null>(null)
 
-    async function submit(body: CreateMeetingBody) {
+    // resolves to true when the meeting was created
+    async function submit(body: CreateMeetingBody): Promise<boolean> {
         if (phase === "processing") {
-            return
+            return false
         }
         setPhase("processing")
         setError(null)
@@ -21,9 +22,11 @@ export function useCreateMeeting(onCreated: (meeting: Meeting) => void) {
             })
             setPhase("idle")
             onCreated(meeting)
+            return true
         } catch (caught) {
             setError(caught instanceof ApiError ? caught : ApiError.internal())
             setPhase("error")
+            return false
         }
     }
 

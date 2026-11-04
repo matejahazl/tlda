@@ -21,7 +21,12 @@ const meeting: Meeting = {
 describe("safe rendering", () => {
     it("renders LLM and user text as plain text, never as markup", () => {
         const html = renderToStaticMarkup(
-            <Planner initialMeetings={[meeting]} />,
+            <Planner
+                initialPage={{
+                    meetings: [meeting],
+                    nextCursor: null,
+                }}
+            />,
         )
 
         expect(html).not.toContain("<img")

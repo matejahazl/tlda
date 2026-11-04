@@ -34,6 +34,11 @@ export type Meeting = {
     items: ActionItem[]
 }
 
+export type PaginatedMeetings = {
+    meetings: Meeting[]
+    nextCursor: number | null
+}
+
 // What the client sends, before the schema trims and cleans it
 export type CreateMeetingBody = z.input<typeof createMeetingSchema>
 

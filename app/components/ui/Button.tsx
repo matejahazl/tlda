@@ -1,4 +1,5 @@
 import type { ComponentProps } from "react"
+import type { SpinnerTone } from "./Spinner"
 import { Spinner } from "./Spinner"
 
 type ButtonVariant = "primary" | "primary-danger" | "secondary" | "delete"
@@ -25,6 +26,13 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
     delete: "text-muted hover-fine:not-disabled:bg-danger hover-fine:not-disabled:text-danger-ink",
 }
 
+const SPINNER_TONES: Record<ButtonVariant, SpinnerTone> = {
+    primary: "light",
+    "primary-danger": "light",
+    secondary: "dark",
+    delete: "dark",
+}
+
 const SIZE_CLASSES: Record<ButtonSize, string> = {
     md: "min-h-[48px] gap-[10px] rounded-[12px] px-[20px] text-button",
     sm: "min-h-[40px] gap-[8px] rounded-[10px] px-[14px] text-label font-semibold",
@@ -48,8 +56,7 @@ export function Button({
             aria-busy={pending}
             className={`${BASE_CLASSES} ${VARIANT_CLASSES[variant]} ${SIZE_CLASSES[size]}`}
         >
-            {/* the spinner is white, so use pending on the filled variants */}
-            {pending && <Spinner tone="light" />}
+            {pending && <Spinner tone={SPINNER_TONES[variant]} />}
             {children}
         </button>
     )

@@ -1,5 +1,5 @@
 import "server-only"
-import { eq } from "drizzle-orm"
+import { desc, eq, lt } from "drizzle-orm"
 import type { Logger } from "pino"
 import type { LlmIntegrationService } from "@/integrations"
 import { AppError, ERROR_TABLE } from "@/lib/errors"
@@ -16,9 +16,11 @@ import type {
     CreateMeetingInput,
     ItemStatus,
     Meeting,
+    PaginatedMeetings,
 } from "@/types"
 
 const DEFAULT_MEETING_TITLE = "Untitled meeting" // used when neither the user nor the model gives a valid title
+const MEETINGS_PAGE_SIZE = 5 // meetings per page of the list
 
 export class MeetingService {
     constructor(
@@ -26,8 +28,8 @@ export class MeetingService {
         private readonly llm: LlmIntegrationService,
     ) {}
 
-    list(): Meeting[] {
-        return this.db.query.meetings
+    list(cursor?: number): PaginatedMeetings {
+        const rows = this.db.query.meetings
             .findMany({
                 columns: { id: true, title: true, createdAt: true }, // no raw notes
                 with: {
@@ -36,12 +38,18 @@ export class MeetingService {
                         orderBy: (item, { asc }) => asc(item.id),
                     },
                 },
-                orderBy: (meeting, { desc }) => [
-                    desc(meeting.createdAt),
-                    desc(meeting.id),
-                ],
+                where: cursor ? lt(meetings.id, cursor) : undefined,
+                orderBy: desc(meetings.id),
+                limit: MEETINGS_PAGE_SIZE + 1,
             })
             .sync()
+        const page = rows.slice(0, MEETINGS_PAGE_SIZE)
+
+        return {
+            meetings: page,
+            nextCursor:
+                rows.length > page.length ? page[page.length - 1].id : null,
+        }
     }
 
     async create(input: CreateMeetingInput, log: Logger): Promise<Meeting> {

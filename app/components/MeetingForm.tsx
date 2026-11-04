@@ -1,7 +1,8 @@
-import type { SubmitEvent } from "react"
+import { type SubmitEvent, useState } from "react"
 import type { CreatePhase } from "@/app/hooks"
 import type { ApiError } from "@/app/lib/apiClient"
 import { createMeetingSchema, fieldMessages } from "@/lib/schemas"
+import type { CreateMeetingBody } from "@/types"
 import { WarningIcon } from "./icons"
 import { Button, Textarea, TextInput } from "./ui"
 
@@ -18,26 +19,22 @@ const PHASE_MESSAGES: Record<CreatePhase, string | null> = {
 }
 
 type MeetingFormProps = {
-    title: string
-    notes: string
     phase: CreatePhase
     error: ApiError | null
     announcement: string
-    onTitleChange: (value: string) => void
-    onNotesChange: (value: string) => void
-    onSubmit: () => void
+    onEdit: () => void
+    onSubmit: (body: CreateMeetingBody) => Promise<boolean>
 }
 
 export function MeetingForm({
-    title,
-    notes,
     phase,
     error,
     announcement,
-    onTitleChange,
-    onNotesChange,
+    onEdit,
     onSubmit,
 }: MeetingFormProps) {
+    const [title, setTitle] = useState("")
+    const [notes, setNotes] = useState("")
     const isProcessing = phase === "processing"
 
     const parsed = createMeetingSchema.safeParse({ title, notes })
@@ -50,10 +47,15 @@ export function MeetingForm({
     const showBanner =
         error !== null && !(serverErrors.title ?? serverErrors.notes)
 
-    const handleSubmit = (event: SubmitEvent) => {
+    const handleSubmit = async (event: SubmitEvent) => {
         event.preventDefault()
-        if (parsed.success && !isProcessing) {
-            onSubmit()
+        if (
+            parsed.success &&
+            !isProcessing &&
+            (await onSubmit({ title, notes }))
+        ) {
+            setTitle("")
+            setNotes("")
         }
     }
 
@@ -84,7 +86,10 @@ export function MeetingForm({
                     value={title}
                     readOnly={isProcessing}
                     error={titleError}
-                    onChange={(event) => onTitleChange(event.target.value)}
+                    onChange={(event) => {
+                        setTitle(event.target.value)
+                        onEdit()
+                    }}
                 />
 
                 <Textarea
@@ -94,7 +99,10 @@ export function MeetingForm({
                     value={notes}
                     readOnly={isProcessing}
                     error={notesError}
-                    onChange={(event) => onNotesChange(event.target.value)}
+                    onChange={(event) => {
+                        setNotes(event.target.value)
+                        onEdit()
+                    }}
                 />
 
                 {showBanner && <ErrorBanner message={error.message} />}

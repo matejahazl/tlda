@@ -75,6 +75,10 @@ export const idSchema = z
     .transform(Number)
     .pipe(z.number().int().safe())
 
+export const listMeetingsQuerySchema = z.strictObject({
+    cursor: idSchema.optional(),
+})
+
 const llmItemSchema = z.object({
     text: z
         .string()

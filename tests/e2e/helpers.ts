@@ -4,11 +4,17 @@ export const NOTES =
     "Sam will send the budget to finance by Friday.\nPriya should book the venue.\nWe discussed the weather."
 
 export async function clearMeetings(request: APIRequestContext) {
-    const meetings: { id: number }[] = await (
-        await request.get("/api/meetings")
-    ).json()
-    for (const { id } of meetings) {
-        await request.delete(`/api/meetings/${id}`)
+    // the list is paged, so keep deleting the first page until it is empty
+    for (;;) {
+        const { meetings }: { meetings: { id: number }[] } = await (
+            await request.get("/api/meetings")
+        ).json()
+        if (meetings.length === 0) {
+            return
+        }
+        for (const { id } of meetings) {
+            await request.delete(`/api/meetings/${id}`)
+        }
     }
 }
 
@@ -17,6 +23,12 @@ export async function seedMeeting(
     title = "Weekly sync",
 ) {
     await request.post("/api/meetings", { data: { title, notes: NOTES } })
+}
+
+export async function seedMeetings(request: APIRequestContext, count: number) {
+    for (let i = 1; i <= count; i++) {
+        await seedMeeting(request, `Sync ${i}`)
+    }
 }
 
 export async function fillForm(page: Page, notes = NOTES) {
