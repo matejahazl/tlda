@@ -44,7 +44,7 @@ npm run build     # production build, then: npm start
 
 ## End-to-end tests
 
-`npm run test:e2e` builds the app, starts it on port 3100 with the mock LLM and a throwaway database (`data/e2e.db`, wiped on each run), and compares screenshots in `e2e/` at desktop (1280px) and mobile (390px) widths. The first run needs a browser: `npx playwright install chromium`.
+`npm run test:e2e` builds the app, starts it on port 3100 with the mock LLM and a throwaway database (`data/e2e.db`, wiped on each run), and compares screenshots in `tests/e2e/` at desktop (1280px) and mobile (390px) widths. The first run needs a browser: `npx playwright install chromium`.
 
 - Baselines are committed next to the specs and are Chromium on macOS only (`*-darwin.png`). On another OS, run `npm run test:e2e:update` first and review the new images.
 - After an intended UI change, run `npm run test:e2e:update` and check the changed images before committing.

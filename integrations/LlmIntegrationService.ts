@@ -1,6 +1,5 @@
 import "server-only"
 import { llmOutputSchema } from "@/lib/schemas"
-import { LlmUnavailableError } from "./errors"
 import type {
     ExtractionResult,
     FailureReason,
@@ -24,6 +23,14 @@ Be thorough: missing a task is worse than listing one extra. List every task tha
 - things the notes say are coming and need preparation ("their new ops lead will want a walkthrough")
 - checks the writer says they must do first
 One short imperative sentence per task, owner first when known. Do not list pure facts, complaints or opinions.`
+
+// Providers map provider 5xx, network errors and 429 to this, so API error codes never change when swapping providers
+export class LlmUnavailableError extends Error {
+    constructor(message = "LLM provider unavailable", options?: ErrorOptions) {
+        super(message, options)
+        this.name = "LlmUnavailableError"
+    }
+}
 
 export class LlmIntegrationService {
     constructor(

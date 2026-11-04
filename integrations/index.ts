@@ -5,8 +5,10 @@ import { GeminiProvider } from "./providers/GeminiProvider"
 import { MockProvider } from "./providers/MockProvider"
 import type { LlmProvider } from "./types"
 
-export * from "./errors"
-export { LlmIntegrationService } from "./LlmIntegrationService"
+export {
+    LlmIntegrationService,
+    LlmUnavailableError,
+} from "./LlmIntegrationService"
 export { GeminiProvider } from "./providers/GeminiProvider"
 export { MockProvider } from "./providers/MockProvider"
 export * from "./types"

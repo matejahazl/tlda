@@ -4,28 +4,21 @@ import type { Logger } from "pino"
 import type { LlmIntegrationService } from "@/integrations"
 import { AppError, ERROR_TABLE } from "@/lib/errors"
 import type { Db } from "@/lib/server/db"
-import { actionItems, meetings } from "@/lib/server/db"
+import {
+    actionItems,
+    ITEM_COLUMNS,
+    MEETING_COLUMNS,
+    meetings,
+} from "@/lib/server/db"
 import { LLM_FAILURE_CODES } from "@/lib/server/errors"
-import type { ActionItem, ItemStatus, Meeting } from "@/types"
+import type {
+    ActionItem,
+    CreateMeetingInput,
+    ItemStatus,
+    Meeting,
+} from "@/types"
 
 const DEFAULT_MEETING_TITLE = "Untitled meeting" // used when neither the user nor the model gives a valid title
-
-const MEETING_COLUMNS = {
-    id: meetings.id,
-    title: meetings.title,
-    createdAt: meetings.createdAt,
-}
-const ITEM_COLUMNS = {
-    id: actionItems.id,
-    text: actionItems.text,
-    status: actionItems.status,
-}
-
-type CreateMeetingInput = {
-    title?: string // typed by the user
-    notes: string // cleaned notes, saved and sent to the model
-    rawNotes: string // notes exactly as submitted, for the log only
-}
 
 export class MeetingService {
     constructor(

@@ -1,7 +1,7 @@
 import "server-only"
 import type { z } from "zod"
 import { AppError } from "@/lib/errors"
-import { fieldMessages } from "@/lib/zodFields"
+import { fieldMessages } from "@/lib/schemas"
 
 const JSON_CONTENT_TYPE = /^application\/json\s*(;.*)?$/i
 

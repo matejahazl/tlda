@@ -1,5 +1,5 @@
 import "server-only"
-import { LlmUnavailableError } from "../errors"
+import { LlmUnavailableError } from "../LlmIntegrationService"
 import type { LlmProvider, LlmRequest, LlmResponse } from "../types"
 
 const API_URL = "https://generativelanguage.googleapis.com/v1beta/models" // Gemini REST endpoint

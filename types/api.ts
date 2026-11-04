@@ -36,3 +36,8 @@ export type Meeting = {
 
 // What the client sends, before the schema trims and cleans it
 export type CreateMeetingBody = z.input<typeof createMeetingSchema>
+
+// What the service gets, the cleaned body, plus raw notes (for the log)
+export type CreateMeetingInput = z.output<typeof createMeetingSchema> & {
+    rawNotes: string
+}

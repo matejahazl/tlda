@@ -52,3 +52,15 @@ export const actionItemsRelations = relations(actionItems, ({ one }) => ({
         references: [meetings.id],
     }),
 }))
+
+// The columns the API returns
+export const MEETING_COLUMNS = {
+    id: meetings.id,
+    title: meetings.title,
+    createdAt: meetings.createdAt,
+}
+export const ITEM_COLUMNS = {
+    id: actionItems.id,
+    text: actionItems.text,
+    status: actionItems.status,
+}

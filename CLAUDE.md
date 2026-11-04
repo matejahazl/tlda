@@ -42,7 +42,7 @@ Formatting and linting (config in `SPEC.md`)
 - Tailwind lint rules enforce shorthand (e.g. `size-4` instead of `w-4 h-4`) and forbid contradicting classes; fix the warning rather than silencing it.
 - Never silence a rule with `eslint-disable` unless there is no alternative, and then add a short comment saying why.
 - Run `npm run lint` before finishing any task.
-- Also run the e2e and visual tests (`npm run test:e2e`, Playwright screenshots in `e2e/`) before finishing any task that touches the UI, API or styles. If a screenshot changes on purpose, look at the new image, then run `npm run test:e2e:update` and say which baselines changed. Never update baselines just to make a failing test pass.
+- Also run the e2e and visual tests (`npm run test:e2e`, Playwright screenshots in `tests/e2e/`) before finishing any task that touches the UI, API or styles. If a screenshot changes on purpose, look at the new image, then run `npm run test:e2e:update` and say which baselines changed. Never update baselines just to make a failing test pass.
 
 General code style
 - Module-level constants use `SCREAMING_SNAKE_CASE`, are declared at the top of the file directly after imports, and have a short trailing comment explaining the value, e.g. `const MAX_NOTES_LENGTH = 20000 // max characters accepted for pasted notes`. This covers the validation limits and timeouts in the spec.

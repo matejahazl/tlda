@@ -4,7 +4,7 @@ const PORT = 3100
 const E2E_DB = "data/e2e.db"
 
 export default defineConfig({
-    testDir: "./e2e",
+    testDir: "./tests/e2e",
     workers: 1,
     use: { baseURL: `http://127.0.0.1:${PORT}` },
     projects: [

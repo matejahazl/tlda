@@ -18,6 +18,18 @@ function isSingleLine(value: string): boolean {
     return !/[\r\n]/.test(value)
 }
 
+export function fieldMessages(
+    error: z.ZodError,
+    fallbackField = "body",
+): Record<string, string> {
+    const fields: Record<string, string> = {}
+    for (const issue of error.issues) {
+        const field = issue.path.join(".") || fallbackField
+        fields[field] ??= issue.message
+    }
+    return fields
+}
+
 const notesSchema = z
     .string({ error: "Notes are required" })
     .transform(cleanText)

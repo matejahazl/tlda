@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { PATCH } from "@/app/api/action-items/[id]/route"
+import { DELETE } from "@/app/api/meetings/[id]/route"
+import { GET, POST } from "@/app/api/meetings/route"
 import {
     LlmIntegrationService,
     LlmUnavailableError,
@@ -8,9 +11,6 @@ import { createDb, type Db } from "@/lib/server/db"
 import { actionItems, meetings } from "@/lib/server/db/schema"
 import type * as LoggerModule from "@/lib/server/logger"
 import { MeetingService } from "@/services/MeetingService"
-import { PATCH } from "../app/api/action-items/[id]/route"
-import { DELETE } from "../app/api/meetings/[id]/route"
-import { GET, POST } from "../app/api/meetings/route"
 
 type Handler = ConstructorParameters<typeof MockProvider>[0]
 

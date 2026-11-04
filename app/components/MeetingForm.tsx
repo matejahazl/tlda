@@ -1,8 +1,7 @@
 import type { SubmitEvent } from "react"
 import type { CreatePhase } from "@/app/hooks"
 import type { ApiError } from "@/app/lib/apiClient"
-import { createMeetingSchema } from "@/lib/schemas"
-import { fieldMessages } from "@/lib/zodFields"
+import { createMeetingSchema, fieldMessages } from "@/lib/schemas"
 import { WarningIcon } from "./icons"
 import { Button, Textarea, TextInput } from "./ui"
 
