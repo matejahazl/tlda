@@ -1,25 +1,14 @@
 import "server-only"
 import { eq } from "drizzle-orm"
 import type { Logger } from "pino"
-import type { FailureReason, LlmIntegrationService } from "@/integrations"
+import type { LlmIntegrationService } from "@/integrations"
 import { AppError, ERROR_TABLE } from "@/lib/errors"
 import type { Db } from "@/lib/server/db"
 import { actionItems, meetings } from "@/lib/server/db"
-import type { ActionItem, ErrorCode, ItemStatus, Meeting } from "@/types"
+import { LLM_FAILURE_CODES } from "@/lib/server/errors"
+import type { ActionItem, ItemStatus, Meeting } from "@/types"
 
 const DEFAULT_MEETING_TITLE = "Untitled meeting" // used when neither the user nor the model gives a valid title
-
-type FailureCode = FailureReason | "no_action_items"
-
-const FAILURE_CODES: Record<FailureCode, ErrorCode> = {
-    timeout: "LLM_TIMEOUT",
-    provider_unavailable: "LLM_UNAVAILABLE",
-    provider_error: "INTERNAL",
-    not_json: "LLM_BAD_OUTPUT",
-    schema_mismatch: "LLM_BAD_OUTPUT",
-    prose: "LLM_BAD_OUTPUT",
-    no_action_items: "NO_ACTION_ITEMS",
-}
 
 const MEETING_COLUMNS = {
     id: meetings.id,
@@ -69,19 +58,27 @@ export class MeetingService {
 
         const latencyMs = Math.round(performance.now() - startedAt)
 
-        const reason: FailureCode | undefined = !result.ok
-            ? result.reason
-            : result.extraction.items.length === 0
-              ? "no_action_items"
-              : undefined
-        const level = reason ? ERROR_TABLE[FAILURE_CODES[reason]].level : "info"
-        const logRawText = Boolean(reason) || log.isLevelEnabled("debug")
+        let reason: string | undefined
+        let error: AppError | undefined
+
+        if (!result.ok) {
+            reason = result.reason
+            error = new AppError(LLM_FAILURE_CODES[result.reason], {
+                cause: result.cause,
+            })
+        } else if (result.extraction.items.length === 0) {
+            reason = "no_action_items"
+            error = new AppError("NO_ACTION_ITEMS")
+        }
+
+        const level = error ? ERROR_TABLE[error.code].level : "info"
+        const logRawText = Boolean(error) || log.isLevelEnabled("debug")
 
         log[level](
             {
                 event: "extraction",
                 ...this.llm.info,
-                outcome: reason ? "error" : "success",
+                outcome: error ? "error" : "success",
                 reason,
                 ...(logRawText && {
                     rawNotes: input.rawNotes,
@@ -98,13 +95,8 @@ export class MeetingService {
             "extraction completed",
         )
 
-        if (!result.ok) {
-            throw new AppError(FAILURE_CODES[result.reason], {
-                cause: result.cause,
-            })
-        }
-        if (result.extraction.items.length === 0) {
-            throw new AppError(FAILURE_CODES.no_action_items)
+        if (error || !result.ok) {
+            throw error
         }
 
         return this.db.transaction((tx) => {
