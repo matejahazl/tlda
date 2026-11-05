@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { Planner } from "@/app/components"
+import { MeetingForm } from "@/app/components/MeetingForm"
 import type { Meeting } from "@/types"
 
 const HTML = "<img src=x onerror=alert(1)>"
@@ -12,6 +13,7 @@ const meeting: Meeting = {
     items: [
         {
             id: 1,
+            meetingId: 1,
             text: `Fix ${HTML} <script>alert(2)</script>`,
             status: "open",
         },
@@ -33,5 +35,13 @@ describe("safe rendering", () => {
         expect(html).not.toContain("<script")
         expect(html).toContain("&lt;img src=x onerror=alert(1)&gt;")
         expect(html).toContain("&lt;script&gt;alert(2)&lt;/script&gt;")
+    })
+})
+
+describe("planner context", () => {
+    it("fails loudly when a consumer renders outside PlannerProvider", () => {
+        expect(() => renderToStaticMarkup(<MeetingForm />)).toThrow(
+            "usePlanner must be used inside PlannerProvider",
+        )
     })
 })

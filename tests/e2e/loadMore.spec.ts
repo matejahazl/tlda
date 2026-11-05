@@ -1,4 +1,3 @@
-import type { Page } from "@playwright/test"
 import { expect, test } from "@playwright/test"
 import {
     banner,
@@ -9,8 +8,6 @@ import {
 } from "./helpers"
 
 const PAGE_URL = "**/api/meetings?cursor=*"
-
-const DATES = (page: Page) => [page.locator("time")]
 
 test.beforeEach(async ({ page, request }) => {
     await clearMeetings(request)
@@ -63,7 +60,6 @@ test("failure keeps the list and offers a retry", async ({ page }) => {
     await expect(page.getByRole("article")).toHaveCount(5)
     await expect(page).toHaveScreenshot("failure.png", {
         fullPage: true,
-        mask: DATES(page),
     })
 
     await page.unroute(PAGE_URL)

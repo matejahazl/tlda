@@ -1,4 +1,6 @@
-export function WarningIcon({ className }: { className?: string }) {
+import type { IconProps } from "./IconProps"
+
+export function WarningIcon({ className }: IconProps) {
     return (
         <svg
             className={className}

@@ -1,4 +1,6 @@
-export function TrashIcon({ className }: { className?: string }) {
+import type { IconProps } from "./IconProps"
+
+export function TrashIcon({ className }: IconProps) {
     return (
         <svg
             className={className}

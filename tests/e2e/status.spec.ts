@@ -19,7 +19,6 @@ test("each status", async ({ page }) => {
     await expect(page.getByText("1 of 2 done")).toBeVisible()
     await expect(page).toHaveScreenshot("mixed.png", {
         fullPage: true,
-        mask: [page.locator("time")],
     })
 })
 
@@ -29,7 +28,6 @@ test("all done", async ({ page }) => {
     await expect(page.getByText("2 of 2 done")).toBeVisible()
     await expect(page).toHaveScreenshot("all-done.png", {
         fullPage: true,
-        mask: [page.locator("time")],
     })
 })
 
@@ -73,7 +71,6 @@ test("failed save rolls back", async ({ page }) => {
     await expect(page.getByText("1 of 2 done")).toBeVisible()
     await expect(page).toHaveScreenshot("optimistic.png", {
         fullPage: true,
-        mask: [page.locator("time")],
     })
     fail()
     await expect(page.getByText("0 of 2 done")).toBeVisible()
@@ -83,7 +80,6 @@ test("failed save rolls back", async ({ page }) => {
     )
     await expect(page).toHaveScreenshot("rolled-back.png", {
         fullPage: true,
-        mask: [page.locator("time")],
     })
 })
 

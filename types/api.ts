@@ -23,6 +23,7 @@ export type ApiErrorBody = {
 
 export type ActionItem = {
     id: number
+    meetingId: number
     text: string
     status: ItemStatus
 }

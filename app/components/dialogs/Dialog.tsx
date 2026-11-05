@@ -93,7 +93,12 @@ export function Dialog({
     )
 }
 
-function DialogError({ title, message }: { title: string; message: string }) {
+type DialogErrorProps = {
+    title: string
+    message: string
+}
+
+function DialogError({ title, message }: DialogErrorProps) {
     return (
         <div
             role="alert"

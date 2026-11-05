@@ -1,23 +1,28 @@
 import { useState } from "react"
 import { apiFetch } from "@/app/lib/apiClient"
-import type { PaginatedMeetings } from "@/types"
+import type { Meeting, PaginatedMeetings } from "@/types"
 
-export function useLoadMeetings(onLoaded: (page: PaginatedMeetings) => void) {
+// Owns the cursor: only the list that loads more pages needs it
+export function useLoadMeetings(
+    initialCursor: number | null,
+    onLoaded: (meetings: Meeting[]) => void,
+) {
+    const [cursor, setCursor] = useState(initialCursor)
     const [pending, setPending] = useState(false)
     const [failed, setFailed] = useState(false)
 
-    async function loadMore(cursor: number) {
-        if (pending) {
+    async function loadMore() {
+        if (pending || cursor === null) {
             return
         }
         setPending(true)
         setFailed(false)
         try {
-            onLoaded(
-                await apiFetch<PaginatedMeetings>(
-                    `/api/meetings?cursor=${cursor}`,
-                ),
+            const page = await apiFetch<PaginatedMeetings>(
+                `/api/meetings?cursor=${cursor}`,
             )
+            setCursor(page.nextCursor)
+            onLoaded(page.meetings)
         } catch {
             setFailed(true)
         } finally {
@@ -25,5 +30,5 @@ export function useLoadMeetings(onLoaded: (page: PaginatedMeetings) => void) {
         }
     }
 
-    return { pending, failed, loadMore }
+    return { hasMore: cursor !== null, pending, failed, loadMore }
 }

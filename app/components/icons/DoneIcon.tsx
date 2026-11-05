@@ -1,4 +1,6 @@
-export function DoneIcon({ className }: { className?: string }) {
+import type { IconProps } from "./IconProps"
+
+export function DoneIcon({ className }: IconProps) {
     return (
         <svg
             className={className}

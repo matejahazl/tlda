@@ -1,15 +1,15 @@
 import type { ActionItem, Meeting } from "@/types"
 
-// Returns new meetings with one item changed
+// Returns a copy of the meeting with one item changed
 export function patchItem(
-    meetings: Meeting[],
+    meeting: Meeting,
     itemId: number,
     changes: Partial<ActionItem>,
-): Meeting[] {
-    return meetings.map((meeting) => ({
+): Meeting {
+    return {
         ...meeting,
         items: meeting.items.map((item) =>
             item.id === itemId ? { ...item, ...changes } : item,
         ),
-    }))
+    }
 }

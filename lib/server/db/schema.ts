@@ -61,6 +61,7 @@ export const MEETING_COLUMNS = {
 }
 export const ITEM_COLUMNS = {
     id: actionItems.id,
+    meetingId: actionItems.meetingId,
     text: actionItems.text,
     status: actionItems.status,
 }

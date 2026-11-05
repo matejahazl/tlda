@@ -114,6 +114,7 @@ describe("happy path", () => {
         expect(list).toHaveLength(1)
         expect(list[0]).not.toHaveProperty("notes")
         expect(list[0].items[0]).toMatchObject({
+            meetingId: meeting.id,
             text: "Send the report to Bob",
         })
 
@@ -123,6 +124,7 @@ describe("happy path", () => {
         expect(patched.status).toBe(200)
         expect(await patched.json()).toMatchObject({
             id: meeting.items[0].id,
+            meetingId: meeting.id,
             status: "done",
         })
 

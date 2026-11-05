@@ -1,4 +1,6 @@
-export function OpenIcon({ className }: { className?: string }) {
+import type { IconProps } from "./IconProps"
+
+export function OpenIcon({ className }: IconProps) {
     return (
         <svg
             className={className}

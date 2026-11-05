@@ -8,11 +8,11 @@ type StatusChange = { itemId: number; status: ItemStatus }
 // Flips the status instantly and saves it. If the save fails, React drops the optimistic
 // value when the transition ends, so the item goes back to its saved status.
 export function useSetItemStatus(
-    meetings: Meeting[],
+    meeting: Meeting,
     onSaved: (item: ActionItem) => void,
 ) {
-    const [optimisticMeetings, applyChange] = useOptimistic(
-        meetings,
+    const [optimisticMeeting, applyChange] = useOptimistic(
+        meeting,
         (current, { itemId, status }: StatusChange) =>
             patchItem(current, itemId, { status }),
     )
@@ -33,5 +33,5 @@ export function useSetItemStatus(
         })
     }
 
-    return { meetings: optimisticMeetings, setItemStatus }
+    return { meeting: optimisticMeeting, setItemStatus }
 }

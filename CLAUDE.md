@@ -31,7 +31,7 @@ React and file structure
 - Name custom component files in PascalCase matching the exported component (e.g. `StatusButtons.tsx` exporting `StatusButtons`).
 - Component folders always have an `index.ts` re-exporting their members, so consumers import from the folder.
 - In a file with a main exported component and local child components, put the main component at the top and the children below it. Plain helper functions and top-level consts may go above the main component.
-- When a component's props type has more than one property, extract it into a named `type <Component>Props = {...}` above the component.
+- Always type a component's props with a named `type <Component>Props = {...}` above the component, even when it has a single prop. Never type props inline in the function signature. Icons are the one shared exception: they all use `IconProps` from `icons/IconProps.ts`.
 - Keep code organized by concern from the start, even while the project is small: types in `types/`, code shared by client and server (zod schemas, error table) in `lib/`, server-only helpers (`withApi`, logger, env, request validation) in `lib/server/`, client-only helpers (`apiClient`, formatting) in `app/lib/`, business logic in `services/` (`MeetingService`), the LLM integration in `integrations/` (interface, providers, `LlmIntegrationService`), DB schema in `lib/server/db/` (queries live in the service that uses them), pure formatting helpers separate from logic, standalone config/data in its own file. Don't wait for clutter or a second consumer before splitting.
 
 Formatting and linting (config in `SPEC.md`)

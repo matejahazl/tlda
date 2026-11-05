@@ -1,6 +1,8 @@
 import { useState } from "react"
+import { usePlanner } from "@/app/context"
+import { useSetItemStatus } from "@/app/hooks"
 import { countDone, formatDate } from "@/app/lib/format"
-import type { ItemStatus, Meeting } from "@/types"
+import type { Meeting } from "@/types"
 import { DeleteMeetingDialog } from "./dialogs"
 import { TrashIcon } from "./icons"
 import { Button, StatusButtons } from "./ui"
@@ -9,15 +11,14 @@ const LEAVE_DURATION_MS = 200 // matches the leave animation
 
 type MeetingCardProps = {
     meeting: Meeting
-    onSetStatus: (itemId: number, status: ItemStatus) => void
-    onDeleted: (meeting: Meeting) => void // called once the exit animation is done
 }
 
-export function MeetingCard({
-    meeting,
-    onSetStatus,
-    onDeleted,
-}: MeetingCardProps) {
+export function MeetingCard({ meeting: savedMeeting }: MeetingCardProps) {
+    const { updateActionItem, removeMeeting } = usePlanner()
+    const { meeting, setItemStatus } = useSetItemStatus(
+        savedMeeting,
+        updateActionItem,
+    )
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [leaving, setLeaving] = useState(false)
 
@@ -25,7 +26,7 @@ export function MeetingCard({
         setIsDialogOpen(false)
         setLeaving(true)
         // let the exit animation play, then let the list drop the card
-        setTimeout(() => onDeleted(meeting), LEAVE_DURATION_MS)
+        setTimeout(() => removeMeeting(meeting), LEAVE_DURATION_MS)
     }
     const done = countDone(meeting)
     const total = meeting.items.length
@@ -84,7 +85,7 @@ export function MeetingCard({
                                 status={item.status}
                                 label={`Status: ${item.text}`}
                                 onChange={(status) =>
-                                    onSetStatus(item.id, status)
+                                    setItemStatus(item.id, status)
                                 }
                             />
                         </li>
@@ -101,7 +102,11 @@ export function MeetingCard({
     )
 }
 
-function ProgressBar({ ratio }: { ratio: number }) {
+type ProgressBarProps = {
+    ratio: number
+}
+
+function ProgressBar({ ratio }: ProgressBarProps) {
     return (
         <div
             aria-hidden="true"

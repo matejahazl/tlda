@@ -41,7 +41,6 @@ test("cancel keeps the meeting", async ({ page }) => {
     ).toBeVisible()
     await expect(page).toHaveScreenshot("cancelled.png", {
         fullPage: true,
-        mask: [page.locator("time")],
     })
 })
 

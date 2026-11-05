@@ -34,7 +34,12 @@ export class MeetingService {
                 columns: { id: true, title: true, createdAt: true }, // no raw notes
                 with: {
                     items: {
-                        columns: { id: true, text: true, status: true },
+                        columns: {
+                            id: true,
+                            meetingId: true,
+                            text: true,
+                            status: true,
+                        },
                         orderBy: (item, { asc }) => asc(item.id),
                     },
                 },

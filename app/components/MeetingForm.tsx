@@ -1,8 +1,8 @@
 import { type SubmitEvent, useState } from "react"
+import { usePlanner } from "@/app/context"
 import type { CreatePhase } from "@/app/hooks"
-import type { ApiError } from "@/app/lib/apiClient"
+import { pluralize } from "@/app/lib/format"
 import { createMeetingSchema, fieldMessages } from "@/lib/schemas"
-import type { CreateMeetingBody } from "@/types"
 import { WarningIcon } from "./icons"
 import { Button, Textarea, TextInput } from "./ui"
 
@@ -18,44 +18,41 @@ const PHASE_MESSAGES: Record<CreatePhase, string | null> = {
     error: "Extraction failed.",
 }
 
-type MeetingFormProps = {
-    phase: CreatePhase
-    error: ApiError | null
-    announcement: string
-    onEdit: () => void
-    onSubmit: (body: CreateMeetingBody) => Promise<boolean>
-}
-
-export function MeetingForm({
-    phase,
-    error,
-    announcement,
-    onEdit,
-    onSubmit,
-}: MeetingFormProps) {
+export function MeetingForm() {
+    const { extractPhase, extractError, extractMeeting, clearExtractError } =
+        usePlanner()
     const [title, setTitle] = useState("")
     const [notes, setNotes] = useState("")
-    const isProcessing = phase === "processing"
+    const [announcement, setAnnouncement] = useState("")
+    const isExtracting = extractPhase === "processing"
 
     const parsed = createMeetingSchema.safeParse({ title, notes })
     const clientErrors = parsed.success ? {} : fieldMessages(parsed.error)
     const serverErrors =
-        error?.code === "VALIDATION_ERROR" ? (error.fields ?? {}) : {}
+        extractError?.code === "VALIDATION_ERROR"
+            ? (extractError.fields ?? {})
+            : {}
     const titleError = clientErrors.title ?? serverErrors.title
     const notesError =
         (notes.trim() ? clientErrors.notes : undefined) ?? serverErrors.notes
     const showBanner =
-        error !== null && !(serverErrors.title ?? serverErrors.notes)
+        extractError !== null && !(serverErrors.title ?? serverErrors.notes)
 
     const handleSubmit = async (event: SubmitEvent) => {
         event.preventDefault()
-        if (
-            parsed.success &&
-            !isProcessing &&
-            (await onSubmit({ title, notes }))
-        ) {
+        if (!parsed.success || isExtracting) {
+            return
+        }
+
+        setAnnouncement("")
+        const meeting = await extractMeeting({ title, notes })
+
+        if (meeting) {
             setTitle("")
             setNotes("")
+            setAnnouncement(
+                `Added ${meeting.title} with ${pluralize(meeting.items.length, "action item")}.`,
+            )
         }
     }
 
@@ -84,11 +81,11 @@ export function MeetingForm({
                     placeholder="Weekly product sync"
                     autoComplete="off"
                     value={title}
-                    readOnly={isProcessing}
+                    readOnly={isExtracting}
                     error={titleError}
                     onChange={(event) => {
                         setTitle(event.target.value)
-                        onEdit()
+                        clearExtractError()
                     }}
                 />
 
@@ -97,33 +94,37 @@ export function MeetingForm({
                     label="Notes"
                     placeholder="Paste or type meeting notes…"
                     value={notes}
-                    readOnly={isProcessing}
+                    readOnly={isExtracting}
                     error={notesError}
                     onChange={(event) => {
                         setNotes(event.target.value)
-                        onEdit()
+                        clearExtractError()
                     }}
                 />
 
-                {showBanner && <ErrorBanner message={error.message} />}
+                {showBanner && <ErrorBanner message={extractError.message} />}
 
                 <Button
                     type="submit"
                     disabled={!parsed.success}
-                    pending={isProcessing}
+                    pending={isExtracting}
                 >
-                    {SUBMIT_LABELS[phase]}
+                    {SUBMIT_LABELS[extractPhase]}
                 </Button>
 
                 <p aria-live="polite" className="min-h-[21px] text-meta">
-                    {PHASE_MESSAGES[phase] ?? announcement}
+                    {PHASE_MESSAGES[extractPhase] ?? announcement}
                 </p>
             </form>
         </aside>
     )
 }
 
-function ErrorBanner({ message }: { message: string }) {
+type ErrorBannerProps = {
+    message: string
+}
+
+function ErrorBanner({ message }: ErrorBannerProps) {
     return (
         <div
             role="alert"

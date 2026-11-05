@@ -1,4 +1,6 @@
-export function InProgressIcon({ className }: { className?: string }) {
+import type { IconProps } from "./IconProps"
+
+export function InProgressIcon({ className }: IconProps) {
     return (
         <svg
             className={className}

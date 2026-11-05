@@ -11,7 +11,12 @@ export default defineConfig({
         { name: "desktop", use: { viewport: { width: 1280, height: 900 } } },
         { name: "mobile", use: { viewport: { width: 390, height: 844 } } },
     ],
-    expect: { toHaveScreenshot: { animations: "disabled" } },
+    expect: {
+        toHaveScreenshot: {
+            animations: "disabled",
+            stylePath: "tests/e2e/screenshot.css",
+        },
+    },
     webServer: {
         command: `rm -f ${E2E_DB}* && npm run build && npm run start -- -p ${PORT}`,
         url: `http://127.0.0.1:${PORT}`,

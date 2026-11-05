@@ -1,4 +1,5 @@
 export * from "./DoneIcon"
+export * from "./IconProps"
 export * from "./InProgressIcon"
 export * from "./OpenIcon"
 export * from "./TrashIcon"

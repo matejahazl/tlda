@@ -1,0 +1,4 @@
+/* Dates change every day, so hide them in screenshots; they still take up their space */
+time {
+    visibility: hidden;
+}

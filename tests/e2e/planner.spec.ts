@@ -1,4 +1,3 @@
-import type { Page } from "@playwright/test"
 import { expect, test } from "@playwright/test"
 import {
     banner,
@@ -9,8 +8,6 @@ import {
     NOTES,
     seedMeeting,
 } from "./helpers"
-
-const DATES = (page: Page) => [page.locator("time")]
 
 test.beforeEach(async ({ request }) => {
     await clearMeetings(request)
@@ -32,7 +29,6 @@ test("meeting list", async ({ page, request }) => {
     ).toHaveAttribute("aria-pressed", "true")
     await expect(page).toHaveScreenshot("list.png", {
         fullPage: true,
-        mask: DATES(page),
     })
 })
 
@@ -54,7 +50,6 @@ test("success message", async ({ page }) => {
     await expect(page.getByText("Added Weekly sync with 2")).toBeVisible()
     await expect(page).toHaveScreenshot("created.png", {
         fullPage: true,
-        mask: DATES(page),
     })
 })
 
