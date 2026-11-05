@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { usePlanner } from "@/app/context"
-import { useSetItemStatus } from "@/app/hooks"
+import { usePatchItem } from "@/app/hooks"
 import { countDone, formatDate } from "@/app/lib/format"
 import type { Meeting } from "@/types"
 import { DeleteMeetingDialog } from "./dialogs"
@@ -15,10 +15,7 @@ type MeetingCardProps = {
 
 export function MeetingCard({ meeting: savedMeeting }: MeetingCardProps) {
     const { updateActionItem, removeMeeting } = usePlanner()
-    const { meeting, setItemStatus } = useSetItemStatus(
-        savedMeeting,
-        updateActionItem,
-    )
+    const { meeting, patch } = usePatchItem(savedMeeting, updateActionItem)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [leaving, setLeaving] = useState(false)
 
@@ -85,7 +82,7 @@ export function MeetingCard({ meeting: savedMeeting }: MeetingCardProps) {
                                 status={item.status}
                                 label={`Status: ${item.text}`}
                                 onChange={(status) =>
-                                    setItemStatus(item.id, status)
+                                    patch(item.id, { status })
                                 }
                             />
                         </li>

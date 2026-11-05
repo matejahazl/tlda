@@ -1,4 +1,4 @@
-import { idSchema, setStatusSchema } from "@/lib/schemas"
+import { idSchema, patchItemSchema } from "@/lib/schemas"
 import { parseOrThrow, readJson } from "@/lib/server/validate"
 import { withApi } from "@/lib/server/withApi"
 import { getMeetingService } from "@/services"
@@ -11,7 +11,7 @@ export const PATCH = withApi<{ id: string }>(
     async (req, ctx) => {
         const id = parseOrThrow(idSchema, ctx.params.id, "id")
         ctx.addLogFields({ itemId: id })
-        const { status } = parseOrThrow(setStatusSchema, await readJson(req))
+        const { status } = parseOrThrow(patchItemSchema, await readJson(req))
         ctx.addLogFields({ newStatus: status })
 
         const item = getMeetingService().updateItemStatus(id, status)

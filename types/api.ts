@@ -1,5 +1,9 @@
 import type { z } from "zod"
-import type { createMeetingSchema, ITEM_STATUSES } from "@/lib/schemas"
+import type {
+    createMeetingSchema,
+    ITEM_STATUSES,
+    patchItemSchema,
+} from "@/lib/schemas"
 
 export type ItemStatus = (typeof ITEM_STATUSES)[number]
 
@@ -39,6 +43,9 @@ export type PaginatedMeetings = {
     meetings: Meeting[]
     nextCursor: number | null
 }
+
+// The fields of an action item the client can change
+export type ActionItemChanges = z.input<typeof patchItemSchema>
 
 // What the client sends, before the schema trims and cleans it
 export type CreateMeetingBody = z.input<typeof createMeetingSchema>

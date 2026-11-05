@@ -59,8 +59,8 @@ export function PlannerProvider({
         )
     }
 
-    // No useMemo: the value only changes when this provider re-renders, which happens only on
-    // its own state changes, and those are exactly when consumers need the new value.
+    // Every consumer re-renders on any change (e.g. cards when extractPhase changes). Avoiding that
+    // needs a split context plus React.memo on MeetingCard; not worth it at this size.
     return (
         <PlannerContext
             value={{

@@ -65,7 +65,7 @@ export const createMeetingSchema = z.strictObject({
     notes: notesSchema,
 })
 
-export const setStatusSchema = z.strictObject({
+export const patchItemSchema = z.strictObject({
     status: z.enum(ITEM_STATUSES, { error: "Invalid status" }),
 })
 
