@@ -14,10 +14,13 @@ export function Planner({ initialPage }: PlannerProps) {
         <PlannerProvider initialMeetings={initialPage.meetings}>
             <header className="mx-auto flex max-w-page flex-wrap items-end justify-between gap-[16px] px-[32px] pb-[28px] pt-[48px]">
                 <div className="flex flex-col gap-[6px]">
-                    <h1>TL;DA</h1>
-                    <p className="text-tagline text-muted">
-                        Too long; do actions.
-                    </p>
+                    <div className="flex flex-wrap items-baseline-last gap-x-[16px] gap-y-[4px]">
+                        <h1>TL;DA</h1>
+                        <p className="text-tagline">
+                            <span className="block">Too long;</span>
+                            <span className="block">do actions.</span>
+                        </p>
+                    </div>
                     <p className="pt-[6px]">
                         Paste your meeting notes and get the to-dos.
                     </p>

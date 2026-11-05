@@ -14,6 +14,7 @@
     --color-card: #ffffff;
     --color-ink: #16191c;
     --color-muted: #5b6168;
+    --color-tagline-ink: #7c838b;
     --color-line: #e4e6df;
     --color-accent: #3340b5;
     --color-accent-hover: #27339a;
@@ -136,7 +137,7 @@
 
 @layer components {
     .text-tagline {
-        @apply font-serif text-[22px] leading-[1.2];
+        @apply font-serif text-[28px] leading-[31px] whitespace-nowrap text-tagline-ink;
     }
 
     .text-heading {
