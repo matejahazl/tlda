@@ -90,7 +90,9 @@ export function MeetingCard({ meeting: savedMeeting }: MeetingCardProps) {
                 </ul>
             </article>
             <DeleteMeetingDialog
-                meeting={meeting}
+                meetingId={meeting.id}
+                title={meeting.title}
+                itemCount={meeting.items.length}
                 open={isDialogOpen}
                 onCancel={() => setIsDialogOpen(false)}
                 onDeleted={handleDeleted}

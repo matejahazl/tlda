@@ -1,19 +1,17 @@
 import { useState } from "react"
 import { ApiError, apiFetch } from "@/app/lib/apiClient"
-import type { Meeting } from "@/types"
-
-export function useDeleteMeeting(onDeleted: (meeting: Meeting) => void) {
+export function useDeleteMeeting(onDeleted: () => void) {
     const [pending, setPending] = useState(false)
     const [error, setError] = useState<ApiError | null>(null)
 
-    async function remove(meeting: Meeting) {
+    async function remove(meetingId: number) {
         if (pending) {
             return
         }
         setPending(true)
         setError(null)
         try {
-            await apiFetch<void>(`/api/meetings/${meeting.id}`, {
+            await apiFetch<void>(`/api/meetings/${meetingId}`, {
                 method: "DELETE",
             })
         } catch (caught) {
@@ -26,7 +24,7 @@ export function useDeleteMeeting(onDeleted: (meeting: Meeting) => void) {
             }
         }
         setPending(false)
-        onDeleted(meeting)
+        onDeleted()
     }
 
     function reset() {

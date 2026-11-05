@@ -9,7 +9,8 @@ export type DialogProps = {
     description: string
     confirmLabel: string
     pendingLabel: string
-    error: { title: string; message: string } | null
+    errorTitle: string // heading of the failure banner
+    errorMessage: string | null // shows the failure banner when set
     onConfirm: () => void
     onCancel: () => void
 }
@@ -21,7 +22,8 @@ export function Dialog({
     description,
     confirmLabel,
     pendingLabel,
-    error,
+    errorTitle,
+    errorMessage,
     onConfirm,
     onCancel,
 }: DialogProps) {
@@ -68,7 +70,9 @@ export function Dialog({
                         {description}
                     </p>
                 </div>
-                {error && <DialogError {...error} />}
+                {errorMessage !== null && (
+                    <DialogError title={errorTitle} message={errorMessage} />
+                )}
                 <div className="flex flex-wrap justify-end gap-[8px]">
                     <Button
                         variant="secondary"

@@ -1,17 +1,20 @@
 import { useDeleteMeeting } from "@/app/hooks"
 import { pluralize } from "@/app/lib/format"
-import type { Meeting } from "@/types"
 import { Dialog } from "./Dialog"
 
 type DeleteMeetingDialogProps = {
-    meeting: Meeting
+    meetingId: number
+    title: string
+    itemCount: number
     open: boolean
     onCancel: () => void
-    onDeleted: (meeting: Meeting) => void
+    onDeleted: () => void
 }
 
 export function DeleteMeetingDialog({
-    meeting,
+    meetingId,
+    title,
+    itemCount,
     open,
     onCancel,
     onDeleted,
@@ -23,16 +26,12 @@ export function DeleteMeetingDialog({
             open={open}
             pending={pending}
             title="Delete this meeting?"
-            description={`"${meeting.title}" and its ${pluralize(meeting.items.length, "action item")} will be permanently deleted. This can't be undone.`}
+            description={`"${title}" and its ${pluralize(itemCount, "action item")} will be permanently deleted. This can't be undone.`}
             confirmLabel="Delete meeting"
             pendingLabel="Deleting…"
-            error={
-                error && {
-                    title: "Couldn't delete this meeting",
-                    message: error.message,
-                }
-            }
-            onConfirm={() => void remove(meeting)}
+            errorTitle="Couldn't delete this meeting"
+            errorMessage={error?.message ?? null}
+            onConfirm={() => void remove(meetingId)}
             onCancel={() => {
                 reset()
                 onCancel()
