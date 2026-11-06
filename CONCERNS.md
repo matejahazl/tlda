@@ -3,6 +3,7 @@
 Things deliberately left out of the first version because they are out of scope for a small local app or cost too much effort for what they add. Each entry says what the risk is and what a real fix would look like.
 
 ## Data privacy and logging
+- **Questions and raw LLM responses are logged on failed ask events** (and on every ask event at `debug`). Questions and answers can quote meeting content, so the same concern as below applies.
 - **Raw notes and full LLM responses are logged on every extraction event.** This is intentional for debugging, but meeting notes can contain personal, commercial or otherwise sensitive data. Anyone with log access can read all of it.
   - Real fix: log length and a hash by default; keep raw text behind an explicit debug flag with a short retention period; redact obvious identifiers (emails, phone numbers) before logging.
 - **Notes and titles are stored in plain text in the SQLite file**, including the original `notes` column. No encryption at rest, no deletion path.
@@ -36,6 +37,22 @@ Things deliberately left out of the first version because they are out of scope 
 - **Only one real provider.** Gemini is the only real provider; the OpenAI-compatible one (Groq / OpenRouter / Ollama) was planned but dropped to keep scope small.
   - Real fix: add one class implementing `LlmProvider` plus a factory entry and its env vars (for example `LLM_BASE_URL`). Nothing else changes.
 - **No language handling.** Notes in other languages are sent as-is; quality and the prose check were only designed with English in mind.
+
+## Ask agent
+- **Only single questions, no chat history.** A follow-up like "and which of those are Maya's?" has no context.
+  - Real fix: keep the conversation on the client (or in the DB per session), send the previous turns with each question, and cap the history by tokens.
+- **Read-only tools only.** The agent can't change a status or create an item, so "mark the pricing item done" is answered, not done. This is deliberate: a write tool needs a confirmation step.
+  - Real fix: add write tools that return a proposed change, show it in the UI, and apply it only after the user confirms.
+- **Prompt injection through saved item text is possible.** Item text and titles came from an LLM reading user notes, and they go back to the model as tool results. Text like "ignore your instructions" can steer the answer. The damage is limited to a wrong or odd answer, since no tool writes and `sources` come from the server, not the model.
+  - Real fix: an eval set of adversarial items; keep write tools behind user confirmation (see above).
+- **Cost and latency grow with each turn.** Every turn resends the system prompt, the question and all previous tool results. A question that needs 4 tool calls costs several times more than extraction and can take much longer than the 2s extraction target.
+  - Real fix: measure turns and tokens from the ask logs, trim old tool results, and set a token budget per question.
+- **Answers are a snapshot.** Status changes made after the answer arrived are not reflected; the user has to ask again.
+- **Answer quality is not measured.** There is no set of questions with expected answers, so prompt or model changes can quietly make answers worse or invent items.
+  - Real fix: a small eval set of seeded meetings, questions and expected facts, checked per model.
+- **Search is a plain `LIKE`.** "pricing" won't find "price page"; no stemming, synonyms or ranking.
+  - Real fix: SQLite FTS5, or embeddings if questions get fuzzier.
+- **No streaming.** The answer appears all at once after the last turn.
 
 ## Data and consistency
 - **Duplicate submissions.** The UI disables the button, but the server has no idempotency key, so a double click, a retry or two tabs can create duplicate meetings.
@@ -74,7 +91,7 @@ Things deliberately left out of the first version because they are out of scope 
 ## Added scope (features beyond the brief)
 Useful, but not asked for, so deliberately not built. Anything here is a separate decision, not a gap in the current spec.
 - Edit, add and delete action items; rename a meeting; undo a delete.
-- Search, filter (by status) and sort across meetings.
+- Filter (by status) and sort across meetings in the list itself (the ask agent can search, but the list can't).
 - Due dates, priorities, assignees linked to real people, reminders.
 - Infinite scroll for the meeting list (a Load more button exists).
 - Re-run extraction on a saved meeting, or compare results across models.

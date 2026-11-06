@@ -49,6 +49,10 @@ npm run build     # production build, then: npm start
 - Baselines are committed next to the specs and are Chromium on macOS only (`*-darwin.png`). On another OS, run `npm run test:e2e:update` first and review the new images.
 - After an intended UI change, run `npm run test:e2e:update` and check the changed images before committing.
 
+## Upcoming: ask about your meetings
+
+A question box ("What's still open?", "What did we decide about pricing?") answered by a small agent. The model calls read-only tools (search items, list meetings, get one meeting) in a loop, at most 5 turns within 30 seconds, and answers in plain text with the meetings it used. It can't change anything. The design and the build plan are in [SPEC.md](SPEC.md) under "Ask about your meetings"; its known limits are in [CONCERNS.md](CONCERNS.md) under "Ask agent".
+
 ## Notes
 
 - Known gaps and skipped work are listed in [CONCERNS.md](CONCERNS.md). The full spec is in [SPEC.md](SPEC.md).
