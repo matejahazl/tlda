@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test"
+import { MAX_NOTES_LENGTH } from "@/lib/schemas"
 import {
     banner,
     clearMeetings,
@@ -104,7 +105,9 @@ test("notes hint: too short", async ({ page }) => {
 
 test("notes hint: too long", async ({ page }) => {
     await page.goto("/")
-    await page.getByRole("textbox", { name: "Notes" }).fill("a".repeat(20001))
+    await page
+        .getByRole("textbox", { name: "Notes" })
+        .fill("a".repeat(MAX_NOTES_LENGTH + 1))
     await expect(page.getByText("Notes are too long")).toBeVisible()
     await expect(page.locator("#meeting-form")).toHaveScreenshot(
         "hint-long.png",

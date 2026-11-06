@@ -1,8 +1,9 @@
 import { z } from "zod"
 
-const MIN_NOTES_LENGTH = 20 // min characters accepted for pasted notes
-const MAX_NOTES_LENGTH = 20000 // max characters accepted for pasted notes
-const MAX_TITLE_LENGTH = 120 // max characters in a meeting title
+export const MIN_NOTES_LENGTH = 20 // min characters accepted for pasted notes
+export const MAX_NOTES_LENGTH = 20000 // max characters accepted for pasted notes
+export const MAX_TITLE_LENGTH = 120 // max characters in a meeting title
+export const MAX_QUESTION_LENGTH = 500 // max characters in a question to the ask agent
 
 const CONTROL_CHARS = /(?![\t\n])\p{Cc}/gu // every control character except tab and newline
 
@@ -63,6 +64,21 @@ const titleSchema = z
 export const createMeetingSchema = z.strictObject({
     title: titleSchema,
     notes: notesSchema,
+})
+
+export const askSchema = z.strictObject({
+    question: z
+        .string({ error: "Question is required" })
+        .transform(cleanText)
+        .pipe(
+            z
+                .string()
+                .min(1, "Ask a question")
+                .max(
+                    MAX_QUESTION_LENGTH,
+                    `Questions are limited to ${MAX_QUESTION_LENGTH} characters`,
+                ),
+        ),
 })
 
 export const patchItemSchema = z.strictObject({

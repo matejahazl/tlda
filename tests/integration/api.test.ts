@@ -7,6 +7,12 @@ import {
     LlmUnavailableError,
     MockProvider,
 } from "@/integrations"
+import {
+    MAX_ITEM_TEXT_LENGTH,
+    MAX_NOTES_LENGTH,
+    MAX_TITLE_LENGTH,
+    MIN_NOTES_LENGTH,
+} from "@/lib/schemas"
 import { createDb, type Db } from "@/lib/server/db"
 import { actionItems, meetings } from "@/lib/server/db/schema"
 import type * as LoggerModule from "@/lib/server/logger"
@@ -163,9 +169,10 @@ describe("request validation", () => {
         const bodies = [
             "{not json",
             {},
-            { notes: "short" },
+            { notes: "a".repeat(MIN_NOTES_LENGTH - 1) },
             { notes: NOTES, extra: true },
-            { notes: "a".repeat(20001) },
+            { notes: "a".repeat(MAX_NOTES_LENGTH + 1) },
+            { notes: NOTES, title: "a".repeat(MAX_TITLE_LENGTH + 1) },
         ]
         for (const body of bodies) {
             const res = await postMeeting(body)
@@ -178,7 +185,9 @@ describe("request validation", () => {
 })
 
 describe("unusable LLM output", () => {
-    const longItem = JSON.stringify({ items: [{ text: "a".repeat(301) }] })
+    const longItem = JSON.stringify({
+        items: [{ text: "a".repeat(MAX_ITEM_TEXT_LENGTH + 1) }],
+    })
     const cases: [string, string, string][] = [
         [
             "plain sentences",
