@@ -44,6 +44,17 @@ export type PaginatedMeetings = {
     nextCursor: number | null
 }
 
+export type AskSource = {
+    meetingId: number
+    title: string
+}
+
+// sources: the meetings the ask agent read to answer the question
+export type AskAnswer = {
+    answer: string
+    sources: AskSource[]
+}
+
 // The fields of an action item the client can change
 export type ActionItemChanges = z.input<typeof patchItemSchema>
 

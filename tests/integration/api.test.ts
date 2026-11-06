@@ -18,6 +18,7 @@ import {
 import { createDb, type Db } from "@/lib/server/db"
 import { actionItems, meetings } from "@/lib/server/db/schema"
 import type * as LoggerModule from "@/lib/server/logger"
+import { AskService } from "@/services/AskService"
 import { MeetingService } from "@/services/MeetingService"
 
 type Handler = ConstructorParameters<typeof MockProvider>[0]
@@ -25,10 +26,14 @@ type Handler = ConstructorParameters<typeof MockProvider>[0]
 const state = vi.hoisted(() => ({
     db: undefined as unknown as Db,
     service: undefined as unknown as MeetingService,
+    askService: undefined as unknown as AskService,
     logs: [] as Record<string, unknown>[],
 }))
 
-vi.mock("@/services", () => ({ getMeetingService: () => state.service }))
+vi.mock("@/services", () => ({
+    getMeetingService: () => state.service,
+    getAskService: () => state.askService,
+}))
 vi.mock("@/lib/server/logger", async () => {
     const actual = await vi.importActual<typeof LoggerModule>(
         "@/lib/server/logger",
@@ -97,6 +102,7 @@ const find = (message: string) => state.logs.find((l) => l.msg === message)
 beforeEach(() => {
     state.db = createDb(":memory:")
     state.logs.length = 0
+    state.askService = new AskService()
     useLlm(() => GOOD_REPLY)
 })
 
