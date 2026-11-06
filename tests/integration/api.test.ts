@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { PATCH } from "@/app/api/action-items/[id]/route"
+import { POST as ASK } from "@/app/api/ask/route"
 import { DELETE } from "@/app/api/meetings/[id]/route"
 import { GET, POST } from "@/app/api/meetings/route"
 import {
@@ -10,6 +11,7 @@ import {
 import {
     MAX_ITEM_TEXT_LENGTH,
     MAX_NOTES_LENGTH,
+    MAX_QUESTION_LENGTH,
     MAX_TITLE_LENGTH,
     MIN_NOTES_LENGTH,
 } from "@/lib/schemas"
@@ -65,6 +67,8 @@ function json(url: string, method: string, body: unknown, headers = {}) {
 }
 
 const postMeeting = (body: unknown) => POST(json("/api/meetings", "POST", body))
+
+const ask = (body: unknown) => ASK(json("/api/ask", "POST", body))
 
 const patchItem = (id: string, body: unknown) =>
     PATCH(json(`/api/action-items/${id}`, "PATCH", body), {
@@ -420,5 +424,54 @@ describe("DELETE /api/meetings/:id", () => {
 
         expect(res.status).toBe(400)
         expect((await res.json()).error.code).toBe("VALIDATION_ERROR")
+    })
+})
+
+describe("POST /api/ask", () => {
+    it("answers a valid question", async () => {
+        const res = await ask({ question: "What's still open?" })
+
+        expect(res.status).toBe(200)
+        expect(await res.json()).toEqual({
+            answer: expect.any(String),
+            sources: [],
+        })
+    })
+
+    it("rejects bad bodies with VALIDATION_ERROR", async () => {
+        const bodies = [
+            "{not json",
+            {},
+            { question: " " },
+            { question: "a".repeat(MAX_QUESTION_LENGTH + 1) },
+            { question: "What's open?", extra: true },
+        ]
+        for (const body of bodies) {
+            const res = await ask(body)
+            expect(res.status).toBe(400)
+            expect((await res.json()).error.code).toBe("VALIDATION_ERROR")
+        }
+    })
+})
+
+describe("routes with a JSON body", () => {
+    it("reject a non-JSON content type", async () => {
+        const plain = (url: string, method: string, body: unknown) =>
+            json(url, method, body, { "content-type": "text/plain" })
+        const params = { params: Promise.resolve({ id: "1" }) }
+
+        const responses = [
+            await POST(plain("/api/meetings", "POST", { notes: NOTES })),
+            await PATCH(
+                plain("/api/action-items/1", "PATCH", { status: "done" }),
+                params,
+            ),
+            await ASK(plain("/api/ask", "POST", { question: "What's open?" })),
+        ]
+
+        for (const res of responses) {
+            expect(res.status).toBe(400)
+            expect((await res.json()).error.code).toBe("VALIDATION_ERROR")
+        }
     })
 })
