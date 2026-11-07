@@ -349,11 +349,11 @@ Same definition of done as below, one step at a time.
 5. `list_meetings` and `get_meeting` tools; tests.
 6. Neutral agent types in `integrations/types.ts`; `chat()` added to `LlmProvider` (Gemini throws "not implemented" for now).
 7. `MockProvider.chat` with scripted replies.
-8. `runAgent` for a single text turn, with answer validation; tests.
-9. `runAgent` with tool calls and `sources`; tests.
-10. Unknown tool and invalid args go back to the model; tests.
-11. Turn cap and the 30s timeout; tests with fake timers.
-12. `AskService` uses `runAgent`; the new reasons in `LLM_FAILURE_CODES`; the generic `LLM_*` messages in `lib/errors.ts` and the tests that assert the old ones; route tests for every error path.
+8. `runAgent` for a single text turn, with answer validation. `AskService` uses `runAgent`; `bad_answer` in `LLM_FAILURE_CODES`; the generic `LLM_*` messages in `lib/errors.ts` and the tests that assert the old ones. The agent is tested through `POST /api/ask` with a scripted `MockProvider`, like extraction.
+9. `runAgent` with tool calls and `sources`; route tests.
+10. Unknown tool and invalid args go back to the model; route tests.
+11. Turn cap and the 30s timeout; route tests with fake timers.
+12. Check that every ask error path in the tests list above has a route test. Each new reason (`tool_error`, `max_turns`) gets its `LLM_FAILURE_CODES` entry in the step that adds it, since the table's type requires one.
 13. The ask event log; logging tests.
 14. `GeminiProvider.chat`; try a real question end to end with `curl`, plus one off-topic question ("What is a cat?") to check it is declined.
 15. `useAsk` hook.

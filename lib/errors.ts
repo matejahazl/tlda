@@ -25,19 +25,18 @@ export const ERROR_TABLE: Record<ErrorCode, ErrorInfo> = {
     },
     LLM_BAD_OUTPUT: {
         status: 502,
-        message:
-            "We couldn't turn these notes into action items. Please try again.",
+        message: "The AI response couldn't be used. Please try again.",
         level: "warn",
     },
     LLM_UNAVAILABLE: {
         status: 502,
         message:
-            "The extraction service is busy or unavailable. Please try again in a moment.",
+            "The AI service is busy or unavailable. Please try again in a moment.",
         level: "error",
     },
     LLM_TIMEOUT: {
         status: 504,
-        message: "Extraction took too long. Please try again.",
+        message: "This took too long. Please try again.",
         level: "error",
     },
     INTERNAL: {

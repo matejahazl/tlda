@@ -63,14 +63,14 @@ const ERRORS = [
     [
         502,
         "LLM_BAD_OUTPUT",
-        "We couldn't turn these notes into action items. Please try again.",
+        "The AI response couldn't be used. Please try again.",
     ],
     [
         502,
         "LLM_UNAVAILABLE",
-        "The extraction service is busy or unavailable. Please try again in a moment.",
+        "The AI service is busy or unavailable. Please try again in a moment.",
     ],
-    [504, "LLM_TIMEOUT", "Extraction took too long. Please try again."],
+    [504, "LLM_TIMEOUT", "This took too long. Please try again."],
     [500, "INTERNAL", "Something went wrong on our side. Please try again."],
 ] as const
 

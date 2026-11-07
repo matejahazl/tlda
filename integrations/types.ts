@@ -1,5 +1,23 @@
 import type { z } from "zod"
 import type { llmOutputSchema } from "@/lib/schemas"
+import type { AskSource } from "@/types"
+
+// Providers only make the HTTP call. Prompt, parsing, validation and the timeout live in LlmIntegrationService.
+export interface LlmProvider {
+    complete(
+        request: LlmRequest,
+        opts: { signal: AbortSignal },
+    ): Promise<LlmResponse>
+
+    // one turn of a tool-using conversation (used by the ask agent only)
+    chat(
+        request: ChatRequest,
+        opts: { signal: AbortSignal },
+    ): Promise<ChatResponse>
+}
+
+export type ProviderFailureReason =
+    "timeout" | "provider_unavailable" | "provider_error"
 
 export type LlmRequest = {
     system: string // instructions
@@ -11,6 +29,21 @@ export type LlmResponse = {
     usage?: { inputTokens?: number; outputTokens?: number }
 }
 
+export type Extraction = z.output<typeof llmOutputSchema>
+
+export type FailureReason =
+    ProviderFailureReason | "not_json" | "schema_mismatch" | "prose"
+
+// Never throws: the caller logs the outcome (including the raw response) and decides the error
+export type ExtractionResult =
+    | { ok: true; extraction: Extraction; response: LlmResponse }
+    | {
+          ok: false
+          reason: FailureReason
+          response?: LlmResponse // missing when the call failed before a reply
+          cause?: unknown // the provider error, for the log only
+      }
+
 // A tool as the model sees it
 export type ToolDecl = {
     name: string
@@ -18,7 +51,7 @@ export type ToolDecl = {
     parameters: Record<string, unknown>
 }
 
-// args is untrusted: runAgent validates it with the tool's zod schema
+// runAgent validates args with the tool's zod schema
 export type ToolCall = { id: string; name: string; args: unknown }
 
 export type ToolResult = { id: string; name: string; result: unknown }
@@ -43,36 +76,23 @@ export type ChatResponse = {
     usage?: LlmResponse["usage"]
 }
 
-// Providers only make the HTTP call. Prompt, parsing, validation and the timeout live in LlmIntegrationService.
-export interface LlmProvider {
-    complete(
-        request: LlmRequest,
-        opts: { signal: AbortSignal },
-    ): Promise<LlmResponse>
+export type AgentFailureReason = ProviderFailureReason | "bad_answer"
 
-    // one turn of a tool-using conversation (used by the ask agent only)
-    chat(
-        request: ChatRequest,
-        opts: { signal: AbortSignal },
-    ): Promise<ChatResponse>
+// What the caller logs for every ask outcome
+export type AgentTrace = {
+    responses: string[] // each raw provider response, verbatim
 }
 
-export type Extraction = z.output<typeof llmOutputSchema>
+type AgentRun = {
+    trace: AgentTrace
+    usage: { inputTokens: number; outputTokens: number } // summed over all turns
+    turns: number
+}
 
-export type FailureReason =
-    | "timeout"
-    | "provider_unavailable"
-    | "provider_error"
-    | "not_json"
-    | "schema_mismatch"
-    | "prose"
-
-// Never throws: the caller logs the outcome (including the raw response) and decides the error
-export type ExtractionResult =
-    | { ok: true; extraction: Extraction; response: LlmResponse }
-    | {
+export type AgentResult =
+    | ({ ok: true; answer: string; sources: AskSource[] } & AgentRun)
+    | ({
           ok: false
-          reason: FailureReason
-          response?: LlmResponse // missing when the call failed before a reply
+          reason: AgentFailureReason
           cause?: unknown // the provider error, for the log only
-      }
+      } & AgentRun)

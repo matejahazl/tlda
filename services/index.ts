@@ -12,5 +12,5 @@ export function getMeetingService(): MeetingService {
 }
 
 export function getAskService(): AskService {
-    return new AskService()
+    return new AskService(getLlmIntegrationService())
 }

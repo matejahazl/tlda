@@ -8,6 +8,8 @@ import {
     LlmUnavailableError,
     MockProvider,
 } from "@/integrations"
+import { MAX_ANSWER_LENGTH } from "@/integrations/LlmIntegrationService"
+import type { MockChatStep } from "@/integrations/providers/MockProvider"
 import {
     MAX_ITEM_TEXT_LENGTH,
     MAX_NOTES_LENGTH,
@@ -63,6 +65,15 @@ function useLlm(handler: Handler) {
     )
 }
 
+function scriptAgent(script: MockChatStep[]) {
+    state.askService = new AskService(
+        new LlmIntegrationService(new MockProvider(undefined, script), {
+            provider: "mock",
+            model: "test-model",
+        }),
+    )
+}
+
 function json(url: string, method: string, body: unknown, headers = {}) {
     return new Request(`http://localhost${url}`, {
         method,
@@ -102,8 +113,8 @@ const find = (message: string) => state.logs.find((l) => l.msg === message)
 beforeEach(() => {
     state.db = createDb(":memory:")
     state.logs.length = 0
-    state.askService = new AskService()
     useLlm(() => GOOD_REPLY)
+    scriptAgent([{ kind: "text", text: "Nothing is open." }])
 })
 
 afterEach(() => {
@@ -232,7 +243,7 @@ describe("unusable LLM output", () => {
             expect(res.status).toBe(502)
             expect(error.code).toBe("LLM_BAD_OUTPUT")
             expect(error.message).toBe(
-                "We couldn't turn these notes into action items. Please try again.",
+                "The AI response couldn't be used. Please try again.",
             )
             expect(JSON.stringify(error)).not.toContain(reply.slice(0, 20))
             expect(rowCounts()).toEqual({ meetings: 0, items: 0 })
@@ -434,14 +445,54 @@ describe("DELETE /api/meetings/:id", () => {
 })
 
 describe("POST /api/ask", () => {
-    it("answers a valid question", async () => {
+    it("sends the question to the model and returns its trimmed answer", async () => {
+        let seen: unknown
+        scriptAgent([
+            (request) => {
+                seen = request.messages
+                return { kind: "text", text: "  Two items are open.\n" }
+            },
+        ])
         const res = await ask({ question: "What's still open?" })
 
+        expect(seen).toEqual([{ role: "user", text: "What's still open?" }])
         expect(res.status).toBe(200)
         expect(await res.json()).toEqual({
-            answer: expect.any(String),
+            answer: "Two items are open.",
             sources: [],
         })
+    })
+
+    it("keeps line breaks and accepts an answer of the maximum length", async () => {
+        for (const text of ["a\nb", "a".repeat(MAX_ANSWER_LENGTH)]) {
+            scriptAgent([{ kind: "text", text }])
+            const res = await ask({ question: "What's open?" })
+            expect(await res.json()).toMatchObject({ answer: text })
+        }
+    })
+
+    it.each([
+        ["empty", ""],
+        ["whitespace only", " \n\t "],
+        ["over-long", "a".repeat(MAX_ANSWER_LENGTH + 1)],
+    ])("returns LLM_BAD_OUTPUT for an %s answer", async (_label, text) => {
+        scriptAgent([{ kind: "text", text }])
+        const res = await ask({ question: "What's open?" })
+
+        expect(res.status).toBe(502)
+        expect((await res.json()).error.code).toBe("LLM_BAD_OUTPUT")
+    })
+
+    it("maps an unavailable provider to LLM_UNAVAILABLE", async () => {
+        scriptAgent([
+            () => {
+                throw new LlmUnavailableError("provider 503")
+            },
+        ])
+        const res = await ask({ question: "What's open?" })
+
+        expect(res.status).toBe(502)
+        expect((await res.json()).error.code).toBe("LLM_UNAVAILABLE")
     })
 
     it("rejects bad bodies with VALIDATION_ERROR", async () => {

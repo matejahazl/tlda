@@ -50,7 +50,7 @@ test.describe("axe scan", () => {
             "POST",
             502,
             "LLM_UNAVAILABLE",
-            "The extraction service is busy or unavailable. Please try again in a moment.",
+            "The AI service is busy or unavailable. Please try again in a moment.",
         )
         await page.goto("/")
         await fillForm(page)
