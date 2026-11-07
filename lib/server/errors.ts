@@ -15,4 +15,5 @@ export const LLM_FAILURE_CODES: Record<
     prose: "LLM_BAD_OUTPUT",
     bad_answer: "LLM_BAD_OUTPUT",
     tool_error: "INTERNAL",
+    max_turns: "LLM_BAD_OUTPUT",
 }

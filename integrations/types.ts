@@ -88,7 +88,7 @@ export type ChatResponse = {
 }
 
 export type AgentFailureReason =
-    ProviderFailureReason | "bad_answer" | "tool_error"
+    ProviderFailureReason | "bad_answer" | "tool_error" | "max_turns"
 
 // What the caller logs for every ask outcome
 export type AgentTrace = {

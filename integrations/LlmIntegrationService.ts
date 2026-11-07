@@ -20,6 +20,8 @@ import type {
 const LLM_TIMEOUT_MS = 30_000
 export const MAX_ANSWER_LENGTH = 2000 // max characters in an ask answer, after trimming
 export const MAX_SOURCES = 5 // max meetings listed under an answer
+export const MAX_AGENT_TURNS = 5 // max model turns per question; tool calls in one turn count once
+const AGENT_TIMEOUT_MS = 30_000 // one timer for the whole ask loop, all turns and tool calls
 const JSON_FENCE = /^```(?:json)?[ \t]*\r?\n([\s\S]*?)\r?\n?```$/i // one optional fence around the whole reply
 
 // The notes go inside <notes> delimiters and are treated as data only (prompt injection guard)
@@ -86,8 +88,6 @@ export class LlmIntegrationService {
         question: string
         tools: AgentTool[]
     }): Promise<AgentResult> {
-        // shortcut: no timer yet, the 30s timeout comes in build step 11
-        const controller = new AbortController()
         const decls: ToolDecl[] = tools.map(({ name, description, args }) => ({
             name,
             description,
@@ -101,72 +101,79 @@ export class LlmIntegrationService {
             turns: 0,
         }
 
-        // shortcut: no turn cap yet, MAX_AGENT_TURNS comes in build step 11
-        for (;;) {
-            run.turns++
-            let response: ChatResponse
-            try {
-                response = await this.provider.chat(
-                    { system: AGENT_SYSTEM_PROMPT, messages, tools: decls },
-                    { signal: controller.signal },
-                )
-            } catch (error) {
-                return {
-                    ok: false,
-                    reason: providerFailureReason(
-                        error,
-                        controller.signal.aborted,
-                    ),
-                    cause: error,
-                    ...run,
-                }
-            }
-            run.trace.responses.push(response.raw)
-            run.usage.inputTokens += response.usage?.inputTokens ?? 0
-            run.usage.outputTokens += response.usage?.outputTokens ?? 0
-
-            const { reply } = response
-            if (reply.kind === "text") {
-                const answer = reply.text.trim()
-                if (!answer || answer.length > MAX_ANSWER_LENGTH) {
-                    return { ok: false, reason: "bad_answer", ...run }
-                }
-                return {
-                    ok: true,
-                    answer,
-                    sources: [...sources.values()].slice(0, MAX_SOURCES),
-                    ...run,
-                }
-            }
-
-            // One after another, in order; all results go back in one message
-            const results: ToolResult[] = []
-            for (const call of reply.calls) {
+        // One timer for the whole loop: all turns and tool calls
+        const controller = new AbortController()
+        const timer = setTimeout(() => controller.abort(), AGENT_TIMEOUT_MS)
+        try {
+            while (run.turns < MAX_AGENT_TURNS) {
+                run.turns++
+                let response: ChatResponse
                 try {
-                    const out = callTool(call, tools)
-                    for (const source of out.sources) {
-                        if (!sources.has(source.meetingId)) {
-                            sources.set(source.meetingId, source)
-                        }
-                    }
-                    results.push({
-                        id: call.id,
-                        name: call.name,
-                        result: out.result,
-                    })
+                    response = await this.provider.chat(
+                        { system: AGENT_SYSTEM_PROMPT, messages, tools: decls },
+                        { signal: controller.signal },
+                    )
                 } catch (error) {
                     return {
                         ok: false,
-                        reason: "tool_error",
+                        reason: providerFailureReason(
+                            error,
+                            controller.signal.aborted,
+                        ),
                         cause: error,
                         ...run,
                     }
                 }
+                run.trace.responses.push(response.raw)
+                run.usage.inputTokens += response.usage?.inputTokens ?? 0
+                run.usage.outputTokens += response.usage?.outputTokens ?? 0
+
+                const { reply } = response
+                if (reply.kind === "text") {
+                    const answer = reply.text.trim()
+                    if (!answer || answer.length > MAX_ANSWER_LENGTH) {
+                        return { ok: false, reason: "bad_answer", ...run }
+                    }
+                    return {
+                        ok: true,
+                        answer,
+                        sources: [...sources.values()].slice(0, MAX_SOURCES),
+                        ...run,
+                    }
+                }
+
+                // One after another, in order; all results go back in one message
+                const results: ToolResult[] = []
+                for (const call of reply.calls) {
+                    try {
+                        const out = callTool(call, tools)
+                        for (const source of out.sources) {
+                            if (!sources.has(source.meetingId)) {
+                                sources.set(source.meetingId, source)
+                            }
+                        }
+                        results.push({
+                            id: call.id,
+                            name: call.name,
+                            result: out.result,
+                        })
+                    } catch (error) {
+                        return {
+                            ok: false,
+                            reason: "tool_error",
+                            cause: error,
+                            ...run,
+                        }
+                    }
+                }
+                messages.push(
+                    { role: "model", calls: reply.calls },
+                    { role: "tool", results },
+                )
             }
-            messages.push(
-                { role: "model", calls: reply.calls },
-                { role: "tool", results },
-            )
+            return { ok: false, reason: "max_turns", ...run }
+        } finally {
+            clearTimeout(timer)
         }
     }
 }

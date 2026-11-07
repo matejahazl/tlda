@@ -10,6 +10,7 @@ import {
     MockProvider,
 } from "@/integrations"
 import {
+    MAX_AGENT_TURNS,
     MAX_ANSWER_LENGTH,
     MAX_SOURCES,
 } from "@/integrations/LlmIntegrationService"
@@ -653,6 +654,69 @@ describe("POST /api/ask", () => {
         const { sources } = await (await ask({ question: "How many?" })).json()
 
         expect(sources).toHaveLength(MAX_SOURCES)
+    })
+
+    describe("turn cap", () => {
+        const listCall: MockChatStep = {
+            kind: "tool_calls",
+            calls: [{ id: "c1", name: "list_meetings", args: {} }],
+        }
+        const answer: MockChatStep = { kind: "text", text: "Done." }
+
+        it(`answers on turn ${MAX_AGENT_TURNS}`, async () => {
+            scriptAgent([...Array(MAX_AGENT_TURNS - 1).fill(listCall), answer])
+            const res = await ask({ question: "What's open?" })
+
+            expect(res.status).toBe(200)
+        })
+
+        it(`returns LLM_BAD_OUTPUT after ${MAX_AGENT_TURNS} turns without an answer`, async () => {
+            // the answer after the cap is never asked for
+            scriptAgent([...Array(MAX_AGENT_TURNS).fill(listCall), answer])
+            const res = await ask({ question: "What's open?" })
+
+            expect(res.status).toBe(502)
+            expect((await res.json()).error.code).toBe("LLM_BAD_OUTPUT")
+        })
+    })
+
+    it("returns LLM_TIMEOUT 30 seconds after the question, across all turns", async () => {
+        vi.useFakeTimers()
+        scriptAgent([
+            // the first turn takes 20s, then the second never answers
+            () =>
+                new Promise((resolve) => {
+                    setTimeout(
+                        () =>
+                            resolve({
+                                kind: "tool_calls",
+                                calls: [
+                                    {
+                                        id: "c1",
+                                        name: "list_meetings",
+                                        args: {},
+                                    },
+                                ],
+                            }),
+                        20_000,
+                    )
+                }),
+            (_request, { signal }) =>
+                new Promise((_resolve, reject) => {
+                    signal.addEventListener("abort", () =>
+                        reject(new Error("aborted")),
+                    )
+                }),
+        ])
+        const pending = ask({ question: "What's open?" })
+
+        await vi.advanceTimersByTimeAsync(29_999)
+        expect(find("request completed")).toBeUndefined()
+        await vi.advanceTimersByTimeAsync(1)
+        const res = await pending
+
+        expect(res.status).toBe(504)
+        expect((await res.json()).error.code).toBe("LLM_TIMEOUT")
     })
 
     it("returns INTERNAL when a tool handler throws", async () => {
