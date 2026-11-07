@@ -3,8 +3,7 @@ import { usePlanner } from "@/app/context"
 import type { CreatePhase } from "@/app/hooks"
 import { pluralize } from "@/app/lib/format"
 import { createMeetingSchema, fieldMessages } from "@/lib/schemas"
-import { WarningIcon } from "./icons"
-import { Button, Textarea, TextInput } from "./ui"
+import { Button, ErrorBanner, Textarea, TextInput } from "./ui"
 
 const SUBMIT_LABELS: Record<CreatePhase, string> = {
     idle: "Extract action items",
@@ -102,7 +101,12 @@ export function MeetingForm() {
                     }}
                 />
 
-                {showBanner && <ErrorBanner message={extractError.message} />}
+                {showBanner && (
+                    <ErrorBanner
+                        title="Couldn't extract action items"
+                        message={`${extractError.message} Your notes are still here.`}
+                    />
+                )}
 
                 <Button
                     type="submit"
@@ -117,28 +121,5 @@ export function MeetingForm() {
                 </p>
             </form>
         </aside>
-    )
-}
-
-type ErrorBannerProps = {
-    message: string
-}
-
-function ErrorBanner({ message }: ErrorBannerProps) {
-    return (
-        <div
-            role="alert"
-            className="flex gap-[12px] rounded-[12px] bg-danger p-[16px] text-danger-ink shadow-danger"
-        >
-            <WarningIcon className="size-[20px] flex-none translate-y-[2px]" />
-            <div className="flex flex-col gap-[2px]">
-                <strong className="font-semibold">
-                    Couldn&apos;t extract action items
-                </strong>
-                <span className="text-meta text-pretty text-danger-ink">
-                    {message} Your notes are still here.
-                </span>
-            </div>
-        </div>
     )
 }

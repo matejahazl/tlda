@@ -1,4 +1,5 @@
 export * from "./Button"
+export * from "./ErrorBanner"
 export * from "./LoadMore"
 export * from "./Spinner"
 export * from "./StatusButtons"
