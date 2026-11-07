@@ -15,6 +15,7 @@ export const PATCH = withApi<{ id: string }>(
         ctx.addLogFields({ newStatus: status })
 
         const item = getMeetingService().updateItemStatus(id, status)
+
         return { body: item }
     },
 )

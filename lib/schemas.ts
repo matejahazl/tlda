@@ -24,10 +24,12 @@ export function fieldMessages(
     fallbackField = "body",
 ): Record<string, string> {
     const fields: Record<string, string> = {}
+
     for (const issue of error.issues) {
         const field = issue.path.join(".") || fallbackField
         fields[field] ??= issue.message
     }
+
     return fields
 }
 

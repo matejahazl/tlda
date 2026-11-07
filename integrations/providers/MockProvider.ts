@@ -49,13 +49,16 @@ export class MockProvider implements LlmProvider {
         const step = this.fakes.chat
             ? this.fakes.chat[this.turn++]
             : searchOpenItems
+
         if (!step) {
             throw new Error(
                 `MockProvider: no scripted reply for turn ${this.turn}`,
             )
         }
+
         const reply =
             typeof step === "function" ? await step(request, opts) : step
+
         return { reply, raw: JSON.stringify(reply) }
     }
 }
@@ -67,6 +70,7 @@ function extractFromLines(request: LlmRequest): string {
         .filter((line) => ACTION_LINE.test(line))
         .slice(0, MAX_ITEMS) // stay within the extraction limits
         .map((line) => ({ text: line.slice(0, MAX_ITEM_TEXT_LENGTH) }))
+
     return JSON.stringify({ title: "Mock meeting", items })
 }
 
@@ -84,6 +88,7 @@ function searchOpenItems(request: ChatRequest): ChatReply {
             ],
         }
     }
+
     return {
         kind: "text",
         text: "Mock answer: these are your open items (offline mock, no real model).",

@@ -90,6 +90,7 @@ export class LlmIntegrationService {
         )
 
         let response: LlmResponse
+
         try {
             response = await this.provider.complete(
                 {
@@ -139,10 +140,12 @@ export class LlmIntegrationService {
         // One timer for the whole loop: all turns and tool calls
         const controller = new AbortController()
         const timer = setTimeout(() => controller.abort(), AGENT_TIMEOUT_MS)
+
         try {
             while (run.turns < AGENT_MAX_TURNS) {
                 run.turns++
                 let response: ChatResponse
+
                 try {
                     response = await this.provider.chat(
                         {
@@ -164,16 +167,20 @@ export class LlmIntegrationService {
                         ...run,
                     }
                 }
+
                 run.trace.responses.push(response.raw)
                 run.usage.inputTokens += response.usage?.inputTokens ?? 0
                 run.usage.outputTokens += response.usage?.outputTokens ?? 0
 
                 const { reply } = response
+
                 if (reply.kind === "text") {
                     const answer = reply.text.trim()
+
                     if (!answer || answer.length > AGENT_MAX_ANSWER_LENGTH) {
                         return { ok: false, reason: "bad_answer", ...run }
                     }
+
                     return {
                         ok: true,
                         answer,
@@ -187,13 +194,16 @@ export class LlmIntegrationService {
 
                 // One after another, in order; all results go back in one message
                 const results: ToolResult[] = []
+
                 for (const call of reply.calls) {
                     const startedAt = performance.now()
                     let out: ToolOutput & { ok: boolean }
+
                     try {
                         out = callTool(call, tools)
                     } catch (error) {
                         recordToolCall(run.trace, call, startedAt, false, 0)
+
                         return {
                             ok: false,
                             reason: "tool_error",
@@ -201,23 +211,28 @@ export class LlmIntegrationService {
                             ...run,
                         }
                     }
+
                     recordToolCall(run.trace, call, startedAt, out.ok, out.rows)
+
                     for (const source of out.sources) {
                         if (!sources.has(source.meetingId)) {
                             sources.set(source.meetingId, source)
                         }
                     }
+
                     results.push({
                         id: call.id,
                         name: call.name,
                         result: out.result,
                     })
                 }
+
                 messages.push(
                     { role: "model", calls: reply.calls },
                     { role: "tool", results },
                 )
             }
+
             return { ok: false, reason: "max_turns", ...run }
         } finally {
             clearTimeout(timer)
@@ -231,8 +246,10 @@ function callTool(
     tools: AgentTool[],
 ): ToolOutput & { ok: boolean } {
     const tool = tools.find((t) => t.name === call.name)
+
     if (!tool) {
         const names = tools.map((t) => t.name)
+
         return {
             ok: false,
             result: { error: "unknown_tool", tools: names },
@@ -242,12 +259,14 @@ function callTool(
     }
 
     const args = tool.args.safeParse(call.args)
+
     if (!args.success) {
         // paths and messages only, never the values the model sent
         const issues = args.error.issues.map(({ path, message }) => ({
             path,
             message,
         }))
+
         return {
             ok: false,
             result: { error: "invalid_args", issues },
@@ -282,6 +301,7 @@ function providerFailureReason(
     if (timedOut) {
         return "timeout"
     }
+
     return error instanceof LlmUnavailableError
         ? "provider_unavailable"
         : "provider_error"
@@ -293,6 +313,7 @@ function parseReply(response: LlmResponse): ExtractionResult {
     const json = EXTRACTION_JSON_FENCE.exec(trimmed)?.[1] ?? trimmed
 
     let data: unknown
+
     try {
         data = JSON.parse(json)
     } catch {
@@ -300,6 +321,7 @@ function parseReply(response: LlmResponse): ExtractionResult {
     }
 
     const result = llmOutputSchema.safeParse(data)
+
     if (!result.success) {
         // A bad item (too long or multi-line) means the model wrote prose
         const isBadItem = result.error.issues.some(
@@ -308,11 +330,13 @@ function parseReply(response: LlmResponse): ExtractionResult {
                 typeof issue.path[1] === "number" &&
                 (issue.code === "too_big" || issue.code === "custom"),
         )
+
         return {
             ok: false,
             reason: isBadItem ? "prose" : "schema_mismatch",
             response,
         }
     }
+
     return { ok: true, extraction: result.data, response }
 }

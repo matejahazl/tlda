@@ -13,11 +13,13 @@ export function createDb(path = env.DB_PATH) {
     if (path !== ":memory:") {
         mkdirSync(dirname(path), { recursive: true })
     }
+
     const sqlite = new Database(path)
     sqlite.pragma("journal_mode = WAL")
     sqlite.pragma("foreign_keys = ON")
     const db = drizzle(sqlite, { schema })
     migrate(db, { migrationsFolder: MIGRATIONS_FOLDER })
+
     return db
 }
 

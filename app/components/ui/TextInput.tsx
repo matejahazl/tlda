@@ -8,6 +8,7 @@ type TextInputProps = Omit<ComponentProps<"input">, "className" | "id"> & {
 
 export function TextInput({ id, label, error, ...rest }: TextInputProps) {
     const hintId = `${id}-hint`
+
     return (
         <div className="flex flex-col gap-[6px]">
             <label htmlFor={id} className="text-label">

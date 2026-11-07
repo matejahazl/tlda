@@ -56,6 +56,7 @@ export class AskService {
                 cause: result.cause,
             })
         }
+
         return { answer: result.answer, sources: result.sources }
     }
 }

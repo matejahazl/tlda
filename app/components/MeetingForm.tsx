@@ -39,6 +39,7 @@ export function MeetingForm() {
 
     const handleSubmit = async (event: SubmitEvent) => {
         event.preventDefault()
+
         if (!parsed.success || isExtracting) {
             return
         }

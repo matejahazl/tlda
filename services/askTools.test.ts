@@ -12,19 +12,23 @@ function seedMeeting(title: string, items: [string, ItemStatus][]) {
         .values({ title, notes: "secret raw notes" })
         .returning({ id: meetings.id })
         .get()
+
     if (items.length === 0) {
         return id
     }
+
     db.insert(actionItems)
         .values(
             items.map(([text, status]) => ({ meetingId: id, text, status })),
         )
         .run()
+
     return id
 }
 
 function search(args: Record<string, unknown> = {}) {
     const tool = searchItemsTool(db)
+
     return tool.handler(tool.args.parse(args))
 }
 
@@ -106,6 +110,7 @@ describe("search_items", () => {
 describe("list_meetings", () => {
     const list = (args: Record<string, unknown> = {}) => {
         const tool = listMeetingsTool(db)
+
         return tool.handler(tool.args.parse(args))
     }
 
@@ -149,6 +154,7 @@ describe("list_meetings", () => {
 describe("get_meeting", () => {
     const get = (args: Record<string, unknown>) => {
         const tool = getMeetingTool(db)
+
         return tool.handler(tool.args.parse(args))
     }
 

@@ -12,6 +12,7 @@ export async function readJson(req: Request): Promise<unknown> {
             message: "Content-Type must be application/json.",
         })
     }
+
     try {
         return await req.json()
     } catch {
@@ -27,9 +28,11 @@ export function parseOrThrow<S extends z.ZodType>(
     fallbackField = "body",
 ): z.output<S> {
     const result = schema.safeParse(value)
+
     if (result.success) {
         return result.data
     }
+
     throw new AppError("VALIDATION_ERROR", {
         fields: fieldMessages(result.error, fallbackField),
     })

@@ -98,6 +98,11 @@ const eslintConfig = defineConfig([
             "no-shadow": "off",
             "no-undef": "off",
             curly: "warn",
+            "padding-line-between-statements": [
+                "warn",
+                { blankLine: "always", prev: "*", next: ["if", "return", "for", "while", "try", "throw"] },
+                { blankLine: "always", prev: ["if", "for", "while", "try"], next: "*" },
+            ],
             "@typescript-eslint/consistent-type-imports": "error",
             "@typescript-eslint/no-shadow": "error",
             "@typescript-eslint/no-unused-vars": [

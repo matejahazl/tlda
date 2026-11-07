@@ -13,6 +13,7 @@ export const DELETE = withApi<{ id: string }>(
         ctx.addLogFields({ meetingId: id })
 
         getMeetingService().deleteMeeting(id)
+
         return { status: 204 }
     },
 )

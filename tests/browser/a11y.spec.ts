@@ -167,6 +167,7 @@ test.describe("keyboard", () => {
             await page.keyboard.press("Tab")
             const behindDialog = await page.evaluate(() => {
                 const active = document.activeElement
+
                 return active !== document.body && !active?.closest("dialog")
             })
             expect(behindDialog).toBe(false)

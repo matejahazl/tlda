@@ -121,6 +121,7 @@ export class GeminiProvider implements LlmProvider {
 
     private async generate(body: object, signal: AbortSignal): Promise<string> {
         let res: Response
+
         try {
             res = await fetch(`${API_URL}/${this.model}:generateContent`, {
                 method: "POST",

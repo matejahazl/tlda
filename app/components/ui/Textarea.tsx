@@ -8,6 +8,7 @@ type TextareaProps = Omit<ComponentProps<"textarea">, "className" | "id"> & {
 
 export function Textarea({ id, label, error, ...rest }: TextareaProps) {
     const hintId = `${id}-hint`
+
     return (
         <div className="flex flex-col gap-[6px]">
             <label htmlFor={id} className="text-label">

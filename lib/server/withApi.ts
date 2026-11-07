@@ -46,6 +46,7 @@ export function withApi<
         log.debug({ method: req.method, route }, "request started")
 
         let done: Completion
+
         try {
             const params = routeCtx ? await routeCtx.params : ({} as P)
             const result = await handler(req, {
@@ -75,6 +76,7 @@ export function withApi<
             "request completed",
         )
         const headers = { "x-request-id": requestId }
+
         return done.status === 204
             ? new Response(null, { status: 204, headers })
             : Response.json(done.body, { status: done.status, headers })
@@ -88,6 +90,7 @@ function failure(error: unknown, requestId: string): Completion {
             ? error
             : new AppError("INTERNAL", { cause: error })
     const { status, level } = ERROR_TABLE[appError.code]
+
     return {
         status,
         body: {

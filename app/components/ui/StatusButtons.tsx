@@ -41,6 +41,7 @@ export function StatusButtons({ status, label, onChange }: StatusButtonsProps) {
             {STATUS_OPTIONS.map((option) => {
                 const isSelected = option.value === status
                 const Icon = STATUS_ICONS[option.value]
+
                 return (
                     <button
                         key={option.value}

@@ -82,8 +82,10 @@ export function PlannerProvider({
 
 export function usePlanner(): PlannerContextValue {
     const value = use(PlannerContext)
+
     if (!value) {
         throw new Error("usePlanner must be used inside PlannerProvider")
     }
+
     return value
 }

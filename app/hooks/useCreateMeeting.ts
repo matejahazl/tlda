@@ -13,8 +13,10 @@ export function useCreateMeeting(onCreated: (meeting: Meeting) => void) {
         if (phase === "processing") {
             return null
         }
+
         setPhase("processing")
         setError(null)
+
         try {
             const meeting = await apiFetch<Meeting>("/api/meetings", {
                 method: "POST",
@@ -22,10 +24,12 @@ export function useCreateMeeting(onCreated: (meeting: Meeting) => void) {
             })
             setPhase("idle")
             onCreated(meeting)
+
             return meeting
         } catch (caught) {
             setError(caught instanceof ApiError ? caught : ApiError.internal())
             setPhase("error")
+
             return null
         }
     }

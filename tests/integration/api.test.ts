@@ -56,6 +56,7 @@ vi.mock("@/lib/server/logger", async () => {
     const actual = await vi.importActual<typeof LoggerModule>(
         "@/lib/server/logger",
     )
+
     return {
         ...actual,
         logger: actual.createLogger({
@@ -131,9 +132,11 @@ function seedMeeting(title: string, texts: string[] = []) {
         .values({ title, notes: "raw notes" })
         .returning({ id: meetings.id })
         .get()
+
     for (const text of texts) {
         state.db.insert(actionItems).values({ meetingId: id, text }).run()
     }
+
     return id
 }
 
@@ -330,9 +333,11 @@ describe("GET /api/meetings pagination", () => {
 
     it("pages newest first and a next cursor until the last page", async () => {
         const created = []
+
         for (let i = 0; i < 7; i++) {
             created.push(await (await postMeeting({ notes: NOTES })).json())
         }
+
         await patchItem(String(created[0].items[0].id), { status: "done" })
         const ids = created.map((m) => m.id).reverse()
 
@@ -422,6 +427,7 @@ describe("POST /api/ask", () => {
         scriptAgent([
             (request) => {
                 seen = request.messages
+
                 return { kind: "text", text: "  Two items are open.\n" }
             },
         ])
@@ -450,6 +456,7 @@ describe("POST /api/ask", () => {
             { kind: "tool_calls", calls },
             (request) => {
                 seen = request
+
                 return { kind: "text", text: "The pricing page is open." }
             },
         ])
@@ -518,6 +525,7 @@ describe("POST /api/ask", () => {
         scriptAgent([
             (request) => {
                 tools = request.tools
+
                 return { kind: "text", text: "Done." }
             },
         ])
@@ -541,6 +549,7 @@ describe("POST /api/ask", () => {
             },
             (request) => {
                 seen = request
+
                 return { kind: "text", text: "You have no meetings." }
             },
         ])
@@ -579,6 +588,7 @@ describe("POST /api/ask", () => {
             },
             (request) => {
                 toolMessage = request.messages.at(-1) // read now: runAgent keeps appending to messages
+
                 return {
                     kind: "tool_calls",
                     calls: [
@@ -626,6 +636,7 @@ describe("POST /api/ask", () => {
         for (let i = 0; i <= AGENT_MAX_SOURCES; i++) {
             seedMeeting(`Meeting ${i}`, ["Book the room"])
         }
+
         scriptAgent([
             {
                 kind: "tool_calls",
@@ -781,6 +792,7 @@ describe("POST /api/ask", () => {
             },
             (request) => {
                 toolMessage = request.messages.at(-1)
+
                 // a fooled model can only call the read-only tools again
                 return {
                     kind: "tool_calls",
@@ -855,6 +867,7 @@ describe("routes that call the LLM", () => {
                 expect(res.status).toBe(400)
                 expect((await res.json()).error.code).toBe("VALIDATION_ERROR")
             }
+
             expect(complete).not.toHaveBeenCalled()
             expect(chat).not.toHaveBeenCalled()
             expect(rowCounts()).toEqual({ meetings: 0, items: 0 })
@@ -945,6 +958,7 @@ describe("routes that call the LLM", () => {
                 level: 30,
                 outcome: "success",
             })
+
             for (const key of rawKeys) {
                 expect(find(event)).not.toHaveProperty(key)
             }
@@ -952,6 +966,7 @@ describe("routes that call the LLM", () => {
             state.logs.length = 0
             logger.level = "debug"
             await send()
+
             for (const key of rawKeys) {
                 expect(find(event)).toHaveProperty(key)
             }

@@ -20,6 +20,7 @@ export function usePatchItem(
     const patch = (itemId: number, changes: ActionItemChanges) => {
         startTransition(async () => {
             applyPatch({ itemId, changes })
+
             try {
                 onSaved(
                     await apiFetch<ActionItem>(`/api/action-items/${itemId}`, {

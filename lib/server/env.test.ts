@@ -7,6 +7,7 @@ function messageFor(source: Record<string, string | undefined>) {
     } catch (error) {
         return (error as Error).message
     }
+
     return ""
 }
 

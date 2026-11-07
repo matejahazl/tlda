@@ -15,8 +15,10 @@ export function useLoadMeetings(
         if (pending || cursor === null) {
             return
         }
+
         setPending(true)
         setFailed(false)
+
         try {
             const page = await apiFetch<PaginatedMeetings>(
                 `/api/meetings?cursor=${cursor}`,

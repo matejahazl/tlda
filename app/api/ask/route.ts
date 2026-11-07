@@ -9,5 +9,6 @@ export const dynamic = "force-dynamic" // answers always reflect the current dat
 export const POST = withApi("/api/ask", async (req, ctx) => {
     const { question } = parseOrThrow(askSchema, await readJson(req))
     const body = await getAskService().ask(question, ctx.log)
+
     return { body }
 })

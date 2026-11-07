@@ -15,6 +15,7 @@ export const GET = withApi("/api/meetings", async (req, ctx) => {
     )
     const page = getMeetingService().list(cursor)
     ctx.addLogFields({ cursor, meetingCount: page.meetings.length })
+
     return { body: page }
 })
 
@@ -31,5 +32,6 @@ export const POST = withApi("/api/meetings", async (req, ctx) => {
         ctx.log,
     )
     ctx.addLogFields({ meetingId: meeting.id, itemCount: meeting.items.length })
+
     return { status: 201, body: meeting }
 })

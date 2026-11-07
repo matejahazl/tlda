@@ -8,8 +8,10 @@ export function useDeleteMeeting(onDeleted: () => void) {
         if (pending) {
             return
         }
+
         setPending(true)
         setError(null)
+
         try {
             await apiFetch<void>(`/api/meetings/${meetingId}`, {
                 method: "DELETE",
@@ -17,12 +19,15 @@ export function useDeleteMeeting(onDeleted: () => void) {
         } catch (caught) {
             const failure =
                 caught instanceof ApiError ? caught : ApiError.internal()
+
             if (failure.code !== "NOT_FOUND") {
                 setError(failure)
                 setPending(false)
+
                 return
             }
         }
+
         setPending(false)
         onDeleted()
     }

@@ -29,6 +29,20 @@ const eslintConfig = defineConfig([
             "no-undef": "off",
             "no-unused-vars": "off",
             curly: "warn",
+            // a blank line before if/return/loops/try/throw and after a block, for readability
+            "padding-line-between-statements": [
+                "warn",
+                {
+                    blankLine: "always",
+                    prev: "*",
+                    next: ["if", "return", "for", "while", "try", "throw"],
+                },
+                {
+                    blankLine: "always",
+                    prev: ["if", "for", "while", "try"],
+                    next: "*",
+                },
+            ],
             "@typescript-eslint/consistent-type-imports": "error",
             "@typescript-eslint/no-shadow": "error",
             "@typescript-eslint/no-unused-vars": [

@@ -15,9 +15,11 @@ export async function clearMeetings(request: APIRequestContext) {
         const { meetings }: { meetings: { id: number }[] } = await (
             await request.get("/api/meetings")
         ).json()
+
         if (meetings.length === 0) {
             return
         }
+
         for (const { id } of meetings) {
             await request.delete(`/api/meetings/${id}`)
         }

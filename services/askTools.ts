@@ -51,11 +51,13 @@ function likePattern(text: string): string {
 // The meetings a set of rows came from, unique, in first-seen order
 function sourcesOf(rows: { meetingId: number; meetingTitle: string }[]) {
     const sources = new Map<number, AskSource>()
+
     for (const { meetingId, meetingTitle } of rows) {
         if (!sources.has(meetingId)) {
             sources.set(meetingId, { meetingId, title: meetingTitle })
         }
     }
+
     return [...sources.values()]
 }
 
@@ -151,6 +153,7 @@ export function getMeetingTool(db: Db) {
             if (!meeting) {
                 return { result: { error: "not_found" }, sources: [], rows: 0 }
             }
+
             return {
                 result: meeting,
                 sources: [{ meetingId: meeting.id, title: meeting.title }],

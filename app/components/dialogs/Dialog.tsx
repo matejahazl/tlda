@@ -33,6 +33,7 @@ export function Dialog({
 
     useEffect(() => {
         const dialog = dialogRef.current
+
         if (open && !dialog?.open) {
             dialog?.showModal()
         } else if (!open && dialog?.open) {
@@ -48,6 +49,7 @@ export function Dialog({
             className="m-auto w-[min(420px,calc(100vw-32px))] rounded-[16px] bg-card p-0 text-ink shadow-dialog backdrop:bg-ink/45 open:animate-pop motion-reduce:open:animate-fade"
             onCancel={(event) => {
                 event.preventDefault()
+
                 if (!pending) {
                     onCancel()
                 }

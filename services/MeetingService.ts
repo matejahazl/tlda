@@ -128,6 +128,7 @@ export class MeetingService {
                 )
                 .returning(ITEM_COLUMNS)
                 .all()
+
             return { ...meeting, items: saved }
         })
     }
@@ -155,6 +156,7 @@ export class MeetingService {
         if (!item) {
             throw new AppError("NOT_FOUND")
         }
+
         return item
     }
 }
