@@ -360,6 +360,7 @@ Same definition of done as below, one step at a time.
 16. `AskPanel` (idle and answered) in the side column, and the mobile "Ask about your meetings" header button in `Planner`.
 17. `AskPanel` asking and error states, hint and live region.
 18. Playwright tests, screenshot baseline and axe scan.
+19. Refactor: make `complete()` generic. `LlmRequest` gains optional `responseSchema` (standard JSON schema) and `maxOutputTokens`; the extraction schema and token limit move from `GeminiProvider` to `LlmIntegrationService`, and `GeminiProvider` passes them through (try `responseJsonSchema`). No test covers the Gemini request body, so check with a real extraction via `curl`.
 
 ## Suggested build order
 Definition of done for every step: the tests for that step pass, `npm run lint` has no errors (review any warnings), and `next build` succeeds. Stop and report before starting the next step.
