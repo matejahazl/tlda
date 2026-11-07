@@ -302,7 +302,7 @@ No tool writes anything. That is deliberate: a confused or prompt-injected model
 | `list_meetings` | `limit?` (1-50, default 20) | meetings `{ id, title, createdAt, itemCount, doneCount }`, newest first |
 | `get_meeting` | `id` (positive integer) | the meeting `{ id, title, createdAt, items }`, or `{ error: "not_found" }` |
 
-- Text search uses Drizzle's `like()` with the user's text escaped for `%` and `_`. No SQL from strings.
+- Text search is a parameterized `LIKE ... ESCAPE '\'` through Drizzle's `sql` template (Drizzle's `like()` has no `ESCAPE`), with the model's text escaped for `\`, `%` and `_`. No SQL from strings.
 - Raw `notes` are never returned by a tool: they are the likeliest place for injected instructions, and they are large.
 - Every result is capped (at most 50 rows), so a tool result can't flood the context.
 
