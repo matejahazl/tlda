@@ -4,6 +4,7 @@ import type { ApiErrorBody, ErrorCode } from "@/types"
 type RequestOptions = {
     method?: "GET" | "POST" | "PATCH" | "DELETE"
     body?: unknown
+    signal?: AbortSignal
 }
 
 export class ApiError extends Error {
@@ -24,7 +25,7 @@ export class ApiError extends Error {
 
 export async function apiFetch<T>(
     path: string,
-    { method = "GET", body }: RequestOptions = {},
+    { method = "GET", body, signal }: RequestOptions = {},
 ): Promise<T> {
     let response: Response
     try {
@@ -36,6 +37,7 @@ export async function apiFetch<T>(
                     ? undefined
                     : { "content-type": "application/json" },
             body: body === undefined ? undefined : JSON.stringify(body),
+            signal,
         })
     } catch {
         throw ApiError.internal()
