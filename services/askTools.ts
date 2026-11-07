@@ -121,12 +121,7 @@ export function listMeetingsTool(db: Db) {
 
             return {
                 result: { meetings: rows },
-                sources: sourcesOf(
-                    rows.map(({ id, title }) => ({
-                        meetingId: id,
-                        meetingTitle: title,
-                    })),
-                ),
+                sources: [], // browsing a list is not reading a meeting, so it never crowds out the real sources
                 rows: rows.length,
             }
         },

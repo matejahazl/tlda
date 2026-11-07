@@ -134,10 +134,7 @@ describe("list_meetings", () => {
                 doneCount: 1,
             },
         ])
-        expect(out.sources).toEqual([
-            { meetingId: newer, title: "Empty" },
-            { meetingId: older, title: "Pricing review" },
-        ])
+        expect(out.sources).toEqual([])
         expect(JSON.stringify(out)).not.toContain("secret raw notes")
     })
 

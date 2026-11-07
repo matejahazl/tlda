@@ -64,7 +64,12 @@ export type AgentTool<Args extends z.ZodType = z.ZodType> = {
 }
 
 // runAgent validates args with the tool's zod schema
-export type ToolCall = { id: string; name: string; args: unknown }
+export type ToolCall = {
+    id: string
+    name: string
+    args: unknown
+    signature?: string
+}
 
 export type ToolResult = { id: string; name: string; result: unknown }
 

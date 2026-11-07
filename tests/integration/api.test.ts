@@ -441,7 +441,8 @@ describe("POST /api/ask", () => {
         const sync = seedMeeting("Weekly sync", ["Book the room"])
         const calls = [
             { id: "c1", name: "search_items", args: { query: "pricing" } },
-            { id: "c2", name: "list_meetings", args: {} },
+            { id: "c2", name: "get_meeting", args: { id: sync } },
+            { id: "c3", name: "search_items", args: {} }, // both meetings again
         ]
         let seen: ChatRequest | undefined
         scriptAgent([
@@ -471,15 +472,22 @@ describe("POST /api/ask", () => {
                     },
                     {
                         id: "c2",
-                        name: "list_meetings",
-                        result: { meetings: expect.any(Array) },
+                        name: "get_meeting",
+                        result: expect.objectContaining({
+                            title: "Weekly sync",
+                        }),
+                    },
+                    {
+                        id: "c3",
+                        name: "search_items",
+                        result: { items: expect.any(Array) },
                     },
                 ],
             },
         ])
         expect(await res.json()).toEqual({
             answer: "The pricing page is open.",
-            // unique, in first-seen order: search_items found pricing first
+            // unique, in first-seen order: pricing was read first
             sources: [
                 { meetingId: pricing, title: "Pricing review" },
                 { meetingId: sync, title: "Weekly sync" },
@@ -498,7 +506,8 @@ describe("POST /api/ask", () => {
                     rows: 1,
                     durationMs: expect.any(Number),
                 },
-                { name: "list_meetings", args: {}, ok: true, rows: 2 },
+                { name: "get_meeting", ok: true, rows: 2 }, // the meeting and its item
+                { name: "search_items", args: {}, ok: true, rows: 2 },
             ],
         })
     })
@@ -614,14 +623,14 @@ describe("POST /api/ask", () => {
 
     it(`lists at most ${MAX_SOURCES} source meetings`, async () => {
         for (let i = 0; i <= MAX_SOURCES; i++) {
-            seedMeeting(`Meeting ${i}`)
+            seedMeeting(`Meeting ${i}`, ["Book the room"])
         }
         scriptAgent([
             {
                 kind: "tool_calls",
-                calls: [{ id: "c1", name: "list_meetings", args: {} }],
+                calls: [{ id: "c1", name: "search_items", args: {} }],
             },
-            { kind: "text", text: "You have six meetings." },
+            { kind: "text", text: "Six items are open." },
         ])
         const { sources } = await (await ask({ question: "How many?" })).json()
 
