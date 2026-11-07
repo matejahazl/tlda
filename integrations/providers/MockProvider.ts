@@ -1,4 +1,5 @@
 import "server-only"
+import { MAX_ITEM_TEXT_LENGTH, MAX_ITEMS } from "@/lib/schemas"
 import type {
     ChatRequest,
     ChatResponse,
@@ -8,13 +9,12 @@ import type {
 } from "../types"
 
 type MockCompleteReply = string | LlmResponse
-type MockCompleteHandler = (
+export type MockCompleteHandler = (
     request: LlmRequest,
     opts: { signal: AbortSignal },
 ) => MockCompleteReply | Promise<MockCompleteReply>
 
 type ChatReply = ChatResponse["reply"]
-// A fixed reply, or a function to inspect the request, throw or wait for the abort
 export type MockChatStep =
     | ChatReply
     | ((
@@ -23,29 +23,31 @@ export type MockChatStep =
       ) => ChatReply | Promise<ChatReply>)
 
 const ACTION_LINE = /\b(will|should|needs? to|todo|action)\b/i // offline dev: lines that sound like a task
-const MAX_MOCK_ITEMS = 30 // keeps the offline output valid
 
-// Tests pass a handler (extraction) or a script (ask) to fake any reply or failure. Without them it fakes plausible replies.
+type MockFakes = {
+    complete?: MockCompleteHandler
+    chat?: MockChatStep[] // one step per call, in order
+}
+
+// Tests pass fakes to script any reply or failure. Without them it fakes plausible replies.
 export class MockProvider implements LlmProvider {
     private turn = 0
 
-    constructor(
-        private readonly completeHandler: MockCompleteHandler = extractFromLines,
-        private readonly chatScript?: MockChatStep[],
-    ) {}
+    constructor(private readonly fakes: MockFakes = {}) {}
 
     async complete(request: LlmRequest, opts: { signal: AbortSignal }) {
-        const reply = await this.completeHandler(request, opts)
+        const fake = this.fakes.complete ?? extractFromLines
+        const reply = await fake(request, opts)
+
         return typeof reply === "string" ? { text: reply } : reply
     }
 
-    // One scripted step per call, in order
     async chat(
         request: ChatRequest,
         opts: { signal: AbortSignal },
     ): Promise<ChatResponse> {
-        const step = this.chatScript
-            ? this.chatScript[this.turn++]
+        const step = this.fakes.chat
+            ? this.fakes.chat[this.turn++]
             : searchOpenItems
         if (!step) {
             throw new Error(
@@ -63,8 +65,8 @@ function extractFromLines(request: LlmRequest): string {
         .split("\n")
         .map((line) => line.trim())
         .filter((line) => ACTION_LINE.test(line))
-        .slice(0, MAX_MOCK_ITEMS)
-        .map((line) => ({ text: line.slice(0, 300) }))
+        .slice(0, MAX_ITEMS) // stay within the extraction limits
+        .map((line) => ({ text: line.slice(0, MAX_ITEM_TEXT_LENGTH) }))
     return JSON.stringify({ title: "Mock meeting", items })
 }
 

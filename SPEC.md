@@ -230,13 +230,14 @@ Order in POST: validate → LLM call → validate LLM output → transaction. A 
 ```ts
 interface LlmProvider {
   complete(
-    request: { system: string; user: string },
+    // responseSchema: a standard JSON schema the reply must match (JSON mode); extraction sends it with maxOutputTokens
+    request: { system: string; user: string; responseSchema?: object; maxOutputTokens?: number },
     opts: { signal: AbortSignal },
   ): Promise<{ text: string; usage?: { inputTokens?: number; outputTokens?: number } }>;
 
   // one turn of a tool-using conversation (used by the ask agent only)
   chat(
-    request: { system: string; messages: AgentMessage[]; tools: ToolDecl[] },
+    request: { system: string; messages: AgentMessage[]; tools: ToolDecl[]; maxOutputTokens?: number },
     opts: { signal: AbortSignal },
   ): Promise<{
     reply: { kind: "text"; text: string } | { kind: "tool_calls"; calls: ToolCall[] };
@@ -307,7 +308,7 @@ No tool writes anything. That is deliberate: a confused or prompt-injected model
 - Every result is capped (at most 50 rows), so a tool result can't flood the context.
 
 ### Loop rules
-- At most 5 model turns (`MAX_AGENT_TURNS`). Reaching the cap without a text reply → failure `max_turns`.
+- At most 5 model turns (`AGENT_MAX_TURNS`). Reaching the cap without a text reply → failure `max_turns`.
 - One 30s `AbortController` timer covers the whole loop, all turns and tool calls (`AGENT_TIMEOUT_MS`), the same pattern as extraction → failure `timeout`.
 - An unknown tool name or args that fail the tool's zod schema are not fatal: the zod issue paths (not values) go back to the model as that call's tool result (`{ error: "invalid_args", issues }`), and the loop continues. This counts against the turn cap.
 - Several tool calls in one turn run one after another, in order.
@@ -319,7 +320,7 @@ No tool writes anything. That is deliberate: a confused or prompt-injected model
 
 ### Validation
 - `askSchema` in `lib/` (shared with the client): `{ question }`, `.strict()`, trimmed, control characters stripped, 1-500 chars (`MAX_QUESTION_LENGTH`).
-- The final answer is untrusted: trimmed, 1-2000 chars (`MAX_ANSWER_LENGTH`), line breaks allowed. Empty or over-long → failure `bad_answer`. Rendered only as plain React text with `white-space: pre-line`.
+- The final answer is untrusted: trimmed, 1-2000 chars (`AGENT_MAX_ANSWER_LENGTH`), line breaks allowed. Empty or over-long → failure `bad_answer`. Rendered only as plain React text with `white-space: pre-line`.
 - On the client the "Ask" button stays disabled while the question is empty. A question over the maximum shows a hint under the input ("Questions are limited to 500 characters").
 
 ### Errors

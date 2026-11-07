@@ -11,28 +11,9 @@ import type {
 } from "../types"
 
 const API_URL = "https://generativelanguage.googleapis.com/v1beta/models" // Gemini REST endpoint
-const MAX_OUTPUT_TOKENS = 600 // the reply is a short JSON list
-const MAX_CHAT_OUTPUT_TOKENS = 800 // enough for a 2000-character answer
-const TEMPERATURE = 0.1 // near-deterministic extraction
+const TEMPERATURE = 0.1 // near-deterministic replies
 const MAX_ERROR_BODY_CHARS = 500 // enough of a provider error to debug from the log
 const THINKING_CONFIG = { thinkingLevel: "minimal" } // minimal to reduce latency
-
-// JSON mode alone let the model return items as plain strings, so enforce the shape here (measured)
-const RESPONSE_SCHEMA = {
-    type: "OBJECT",
-    properties: {
-        title: { type: "STRING" },
-        items: {
-            type: "ARRAY",
-            items: {
-                type: "OBJECT",
-                properties: { text: { type: "STRING" } },
-                required: ["text"],
-            },
-        },
-    },
-    required: ["title", "items"],
-}
 
 type GeminiPart = {
     text?: string
@@ -64,9 +45,11 @@ export class GeminiProvider implements LlmProvider {
                 contents: [{ role: "user", parts: [{ text: request.user }] }],
                 generationConfig: {
                     temperature: TEMPERATURE,
-                    maxOutputTokens: MAX_OUTPUT_TOKENS,
-                    responseMimeType: "application/json",
-                    responseSchema: RESPONSE_SCHEMA,
+                    maxOutputTokens: request.maxOutputTokens, // dropped from the JSON when undefined
+                    ...(request.responseSchema && {
+                        responseMimeType: "application/json",
+                        responseJsonSchema: request.responseSchema,
+                    }),
                     thinkingConfig: THINKING_CONFIG,
                 },
             },
@@ -101,7 +84,7 @@ export class GeminiProvider implements LlmProvider {
                 toolConfig: { functionCallingConfig: { mode: "AUTO" } }, // the model may answer without a tool, e.g. to decline
                 generationConfig: {
                     temperature: TEMPERATURE,
-                    maxOutputTokens: MAX_CHAT_OUTPUT_TOKENS,
+                    maxOutputTokens: request.maxOutputTokens,
                     thinkingConfig: THINKING_CONFIG,
                 },
             },

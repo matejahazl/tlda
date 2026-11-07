@@ -21,7 +21,9 @@ export type ProviderFailureReason =
 
 export type LlmRequest = {
     system: string // instructions
-    user: string // the notes
+    user: string // the input, e.g. the notes
+    responseSchema?: Record<string, unknown> // a standard JSON schema; asks for a JSON reply of this shape
+    maxOutputTokens?: number
 }
 
 export type LlmResponse = {
@@ -83,6 +85,7 @@ export type ChatRequest = {
     system: string
     messages: AgentMessage[]
     tools: ToolDecl[]
+    maxOutputTokens?: number // per turn
 }
 
 export type ChatResponse = {

@@ -18,11 +18,14 @@ import {
     MockProvider,
 } from "@/integrations"
 import {
-    MAX_AGENT_TURNS,
-    MAX_ANSWER_LENGTH,
-    MAX_SOURCES,
+    AGENT_MAX_ANSWER_LENGTH,
+    AGENT_MAX_SOURCES,
+    AGENT_MAX_TURNS,
 } from "@/integrations/LlmIntegrationService"
-import type { MockChatStep } from "@/integrations/providers/MockProvider"
+import type {
+    MockChatStep,
+    MockCompleteHandler,
+} from "@/integrations/providers/MockProvider"
 import {
     MAX_ITEM_TEXT_LENGTH,
     MAX_NOTES_LENGTH,
@@ -37,8 +40,6 @@ import { logger } from "@/lib/server/logger"
 import { AskService } from "@/services/AskService"
 import { MAX_SEARCH_QUERY_LENGTH } from "@/services/askTools"
 import { MeetingService } from "@/services/MeetingService"
-
-type Handler = ConstructorParameters<typeof MockProvider>[0]
 
 const state = vi.hoisted(() => ({
     db: undefined as unknown as Db,
@@ -70,10 +71,10 @@ const GOOD_REPLY = JSON.stringify({
     items: [{ text: "Send the report to Bob" }, { text: "Book the room" }],
 })
 
-function mockExtraction(handler: Handler) {
+function mockExtraction(handler: MockCompleteHandler) {
     state.service = new MeetingService(
         state.db,
-        new LlmIntegrationService(new MockProvider(handler), {
+        new LlmIntegrationService(new MockProvider({ complete: handler }), {
             provider: "mock",
             model: "test-model",
         }),
@@ -83,7 +84,7 @@ function mockExtraction(handler: Handler) {
 function scriptAgent(script: MockChatStep[]) {
     state.askService = new AskService(
         state.db,
-        new LlmIntegrationService(new MockProvider(undefined, script), {
+        new LlmIntegrationService(new MockProvider({ chat: script }), {
             provider: "mock",
             model: "test-model",
         }),
@@ -621,8 +622,8 @@ describe("POST /api/ask", () => {
         ])
     })
 
-    it(`lists at most ${MAX_SOURCES} source meetings`, async () => {
-        for (let i = 0; i <= MAX_SOURCES; i++) {
+    it(`lists at most ${AGENT_MAX_SOURCES} source meetings`, async () => {
+        for (let i = 0; i <= AGENT_MAX_SOURCES; i++) {
             seedMeeting(`Meeting ${i}`, ["Book the room"])
         }
         scriptAgent([
@@ -634,7 +635,7 @@ describe("POST /api/ask", () => {
         ])
         const { sources } = await (await ask({ question: "How many?" })).json()
 
-        expect(sources).toHaveLength(MAX_SOURCES)
+        expect(sources).toHaveLength(AGENT_MAX_SOURCES)
     })
 
     describe("turn cap", () => {
@@ -644,16 +645,16 @@ describe("POST /api/ask", () => {
         }
         const answer: MockChatStep = { kind: "text", text: "Done." }
 
-        it(`answers on turn ${MAX_AGENT_TURNS}`, async () => {
-            scriptAgent([...Array(MAX_AGENT_TURNS - 1).fill(listCall), answer])
+        it(`answers on turn ${AGENT_MAX_TURNS}`, async () => {
+            scriptAgent([...Array(AGENT_MAX_TURNS - 1).fill(listCall), answer])
             const res = await ask({ question: "What's open?" })
 
             expect(res.status).toBe(200)
         })
 
-        it(`returns LLM_BAD_OUTPUT after ${MAX_AGENT_TURNS} turns without an answer`, async () => {
+        it(`returns LLM_BAD_OUTPUT after ${AGENT_MAX_TURNS} turns without an answer`, async () => {
             // the answer after the cap is never asked for
-            scriptAgent([...Array(MAX_AGENT_TURNS).fill(listCall), answer])
+            scriptAgent([...Array(AGENT_MAX_TURNS).fill(listCall), answer])
             const res = await ask({ question: "What's open?" })
 
             expect(res.status).toBe(502)
@@ -661,8 +662,8 @@ describe("POST /api/ask", () => {
             expect(find("ask completed")).toMatchObject({
                 level: 40,
                 reason: "max_turns",
-                turns: MAX_AGENT_TURNS,
-                llmResponses: Array(MAX_AGENT_TURNS).fill(
+                turns: AGENT_MAX_TURNS,
+                llmResponses: Array(AGENT_MAX_TURNS).fill(
                     JSON.stringify(listCall),
                 ),
             })
@@ -738,7 +739,7 @@ describe("POST /api/ask", () => {
     })
 
     it("keeps line breaks and accepts an answer of the maximum length", async () => {
-        for (const text of ["a\nb", "a".repeat(MAX_ANSWER_LENGTH)]) {
+        for (const text of ["a\nb", "a".repeat(AGENT_MAX_ANSWER_LENGTH)]) {
             scriptAgent([{ kind: "text", text }])
             const res = await ask({ question: "What's open?" })
             expect(await res.json()).toMatchObject({ answer: text })
@@ -748,7 +749,7 @@ describe("POST /api/ask", () => {
     it.each([
         ["empty", ""],
         ["whitespace only", " \n\t "],
-        ["over-long", "a".repeat(MAX_ANSWER_LENGTH + 1)],
+        ["over-long", "a".repeat(AGENT_MAX_ANSWER_LENGTH + 1)],
     ])(
         "returns LLM_BAD_OUTPUT for an %s answer and logs it verbatim",
         async (_label, text) => {
