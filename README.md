@@ -35,19 +35,19 @@ Restart `npm run dev` after changing `.env`. `gemini-3.5-flash-lite` answers in 
 ## Other commands
 
 ```bash
-npm test          # tests (use the mock provider)
-npm run test:e2e            # end-to-end screenshot tests (Playwright, Chromium)
-npm run test:e2e:update  # regenerate the screenshot baselines
-npm run lint      # ESLint
-npm run build     # production build, then: npm start
+npm test                     # tests (use the mock provider)
+npm run test:browser         # browser tests: screenshots, axe and UI behavior (Playwright, Chromium)
+npm run test:browser:update  # regenerate the screenshot baselines
+npm run lint                 # ESLint
+npm run build                # production build, then: npm start
 ```
 
-## End-to-end tests
+## Browser tests
 
-`npm run test:e2e` builds the app, starts it on port 3100 with the mock LLM and a throwaway database (`data/e2e.db`, wiped on each run), and compares screenshots in `tests/e2e/` at desktop (1280px) and mobile (390px) widths. The first run needs a browser: `npx playwright install chromium`.
+`npm run test:browser` builds the app, starts it on port 3100 with the mock LLM and a throwaway database (`data/browser.db`, wiped on each run), and runs the Playwright specs in `tests/browser/` at desktop (1280px) and mobile (390px) widths: screenshot comparisons, axe scans, keyboard checks and UI behavior. Some specs stub API responses to reach error and pending states. The first run needs a browser: `npx playwright install chromium`.
 
-- Baselines are committed next to the specs and are Chromium on macOS only (`*-darwin.png`). On another OS, run `npm run test:e2e:update` first and review the new images.
-- After an intended UI change, run `npm run test:e2e:update` and check the changed images before committing.
+- Baselines are committed next to the specs and are Chromium on macOS only (`*-darwin.png`). On another OS, run `npm run test:browser:update` first and review the new images.
+- After an intended UI change, run `npm run test:browser:update` and check the changed images before committing.
 
 ## Upcoming: ask about your meetings
 

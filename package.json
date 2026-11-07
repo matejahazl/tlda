@@ -10,8 +10,8 @@
         "lint:fix": "eslint . --fix",
         "format": "prettier --write .",
         "test": "vitest run --passWithNoTests",
-        "test:e2e": "playwright test",
-        "test:e2e:update": "playwright test --update-snapshots",
+        "test:browser": "playwright test",
+        "test:browser:update": "playwright test --update-snapshots",
         "db:generate": "drizzle-kit generate"
     },
     "dependencies": {

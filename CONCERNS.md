@@ -74,8 +74,8 @@ Things deliberately left out of the first version because they are out of scope 
 - **Deployment, CI and dependency scanning** are out of scope: no pipeline, no lockfile audit, no container image.
 
 ## Frontend and quality
-- **No end-to-end tests against the real LLM** (the Playwright suite in `e2e/` uses the mock provider and stubs some API responses), and no frontend unit tests beyond what the build-order steps mention.
-- **Accessibility is only partly tested.** `e2e/a11y.spec.ts` runs axe (WCAG 2.0/2.1 A and AA) on the main states and checks tab order and focus in the delete dialog, but nobody has done a screen reader pass (VoiceOver, NVDA), and axe finds only a fraction of real problems. Not yet covered, most valuable first:
+- **No end-to-end tests against the real LLM** (the Playwright suite in `tests/browser/` uses the mock provider and stubs some API responses), and no frontend unit tests beyond what the build-order steps mention.
+- **Accessibility is only partly tested.** `tests/browser/a11y.spec.ts` runs axe (WCAG 2.0/2.1 A and AA) on the main states and checks tab order and focus in the delete dialog, but nobody has done a screen reader pass (VoiceOver, NVDA), and axe finds only a fraction of real problems. Not yet covered, most valuable first:
   - **Focus after a delete or a create.** The deleted card (and its trash button) is removed, so focus probably drops to `<body>` and a keyboard or screen-reader user loses their place. Not verified. Real fix: assert where focus lands, then move it somewhere sensible (the list heading or the next card). The same question applies after a successful create, when the form clears.
   - **Live-region announcements.** Tests only check that the text is visible. Assert that the `aria-live="polite"` region receives "Added ... with N action items.", "Deleted {title}." and the processing message, and that error banners are `role="alert"`.
   - **ARIA snapshots** (`toMatchAriaSnapshot`) of the list, a card and the dialog, to catch a renamed button or a lost `aria-pressed`, which axe cannot see.

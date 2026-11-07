@@ -12,7 +12,7 @@ export default defineConfig({
     },
     test: {
         environment: "node",
-        exclude: ["tests/e2e/**", "node_modules/**", ".next/**"],
+        exclude: ["tests/browser/**", "node_modules/**", ".next/**"],
         env: { LLM_PROVIDER: "mock", LOG_LEVEL: "debug" },
     },
 })

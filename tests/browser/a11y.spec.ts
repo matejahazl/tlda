@@ -2,6 +2,9 @@ import AxeBuilder from "@axe-core/playwright"
 import type { Page } from "@playwright/test"
 import { expect, test } from "@playwright/test"
 import {
+    ANSWER,
+    answerRequest,
+    askQuestion,
     clearMeetings,
     failRequest,
     fillForm,
@@ -55,6 +58,39 @@ test.describe("axe scan", () => {
         await page.goto("/")
         await fillForm(page)
         await page.getByRole("button", { name: "Extract action items" }).click()
+        await expect(banner(page)).toBeVisible()
+        await expectNoViolations(page)
+    })
+
+    test("ask asking state", async ({ page }) => {
+        await hangRequest(page, "**/api/ask", "POST")
+        await page.goto("/")
+        await askQuestion(page)
+        await expect(
+            page.getByText("Looking through your meetings…"),
+        ).toBeVisible()
+        await expectNoViolations(page)
+    })
+
+    test("ask answered state", async ({ page }) => {
+        await answerRequest(page, "**/api/ask", "POST", ANSWER)
+        await page.goto("/")
+        await askQuestion(page)
+        await expect(page.getByText("Answer ready.")).toBeVisible()
+        await expectNoViolations(page)
+    })
+
+    test("ask error state", async ({ page }) => {
+        await failRequest(
+            page,
+            "**/api/ask",
+            "POST",
+            500,
+            "INTERNAL",
+            "Something went wrong on our side. Please try again.",
+        )
+        await page.goto("/")
+        await askQuestion(page)
         await expect(banner(page)).toBeVisible()
         await expectNoViolations(page)
     })

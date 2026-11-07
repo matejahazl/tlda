@@ -60,7 +60,7 @@ test("failed save rolls back", async ({ page }) => {
                     code: "INTERNAL",
                     message:
                         "Something went wrong on our side. Please try again.",
-                    requestId: "e2e",
+                    requestId: "browser",
                 },
             }),
         })

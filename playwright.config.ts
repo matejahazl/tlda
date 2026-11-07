@@ -1,10 +1,10 @@
 import { defineConfig } from "@playwright/test"
 
 const PORT = 3100
-const E2E_DB = "data/e2e.db"
+const BROWSER_DB = "data/browser.db"
 
 export default defineConfig({
-    testDir: "./tests/e2e",
+    testDir: "./tests/browser",
     workers: 1,
     use: { baseURL: `http://127.0.0.1:${PORT}` },
     projects: [
@@ -14,14 +14,14 @@ export default defineConfig({
     expect: {
         toHaveScreenshot: {
             animations: "disabled",
-            stylePath: "tests/e2e/screenshot.css",
+            stylePath: "tests/browser/screenshot.css",
         },
     },
     webServer: {
-        command: `rm -f ${E2E_DB}* && npm run build && npm run start -- -p ${PORT}`,
+        command: `rm -f ${BROWSER_DB}* && npm run build && npm run start -- -p ${PORT}`,
         url: `http://127.0.0.1:${PORT}`,
         timeout: 180_000,
         reuseExistingServer: false,
-        env: { DB_PATH: E2E_DB, LLM_PROVIDER: "mock", LOG_LEVEL: "error" },
+        env: { DB_PATH: BROWSER_DB, LLM_PROVIDER: "mock", LOG_LEVEL: "error" },
     },
 })
