@@ -11,12 +11,50 @@ export type LlmResponse = {
     usage?: { inputTokens?: number; outputTokens?: number }
 }
 
+// A tool as the model sees it
+export type ToolDecl = {
+    name: string
+    description: string
+    parameters: Record<string, unknown>
+}
+
+// args is untrusted: runAgent validates it with the tool's zod schema
+export type ToolCall = { id: string; name: string; args: unknown }
+
+export type ToolResult = { id: string; name: string; result: unknown }
+
+// Our own conversation format; each provider maps it to its wire format
+export type AgentMessage =
+    | { role: "user"; text: string }
+    | { role: "model"; calls: ToolCall[] }
+    | { role: "tool"; results: ToolResult[] }
+
+export type ChatRequest = {
+    system: string
+    messages: AgentMessage[]
+    tools: ToolDecl[]
+}
+
+export type ChatResponse = {
+    reply:
+        | { kind: "text"; text: string }
+        | { kind: "tool_calls"; calls: ToolCall[] }
+    raw: string // the provider's response body, verbatim, for the log
+    usage?: LlmResponse["usage"]
+}
+
 // Providers only make the HTTP call. Prompt, parsing, validation and the timeout live in LlmIntegrationService.
 export interface LlmProvider {
     complete(
         request: LlmRequest,
         opts: { signal: AbortSignal },
     ): Promise<LlmResponse>
+
+    // one turn of a tool-using conversation (used by the ask agent only)
+    chat(
+        request: ChatRequest,
+        opts: { signal: AbortSignal },
+    ): Promise<ChatResponse>
 }
 
 export type Extraction = z.output<typeof llmOutputSchema>

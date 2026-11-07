@@ -1,6 +1,11 @@
 import "server-only"
 import { LlmUnavailableError } from "../LlmIntegrationService"
-import type { LlmProvider, LlmRequest, LlmResponse } from "../types"
+import type {
+    ChatResponse,
+    LlmProvider,
+    LlmRequest,
+    LlmResponse,
+} from "../types"
 
 const API_URL = "https://generativelanguage.googleapis.com/v1beta/models" // Gemini REST endpoint
 const MAX_OUTPUT_TOKENS = 600 // the reply is a short JSON list
@@ -100,5 +105,9 @@ export class GeminiProvider implements LlmProvider {
                 outputTokens: reply.usageMetadata?.candidatesTokenCount,
             },
         }
+    }
+
+    async chat(): Promise<ChatResponse> {
+        throw new Error("GeminiProvider.chat is not implemented yet") // shortcut: function calling comes in build step 14
     }
 }

@@ -1,5 +1,10 @@
 import "server-only"
-import type { LlmProvider, LlmRequest, LlmResponse } from "../types"
+import type {
+    ChatResponse,
+    LlmProvider,
+    LlmRequest,
+    LlmResponse,
+} from "../types"
 
 type MockReply = string | LlmResponse
 type MockHandler = (
@@ -17,6 +22,10 @@ export class MockProvider implements LlmProvider {
     async complete(request: LlmRequest, opts: { signal: AbortSignal }) {
         const reply = await this.handler(request, opts)
         return typeof reply === "string" ? { text: reply } : reply
+    }
+
+    async chat(): Promise<ChatResponse> {
+        throw new Error("MockProvider.chat is not implemented yet") // shortcut: scripted replies come in build step 7
     }
 }
 

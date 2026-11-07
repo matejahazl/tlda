@@ -16,14 +16,30 @@ const limitArg = z
     .min(1)
     .max(MAX_TOOL_ROWS)
     .default(DEFAULT_TOOL_ROWS)
+    .describe("Maximum number of rows to return")
 
 const listMeetingsArgs = z.strictObject({ limit: limitArg })
 
-const getMeetingArgs = z.strictObject({ id: z.number().int().positive() })
+const getMeetingArgs = z.strictObject({
+    id: z
+        .number()
+        .int()
+        .positive()
+        .describe("The meeting id, from list_meetings or search_items"),
+})
 
 const searchItemsArgs = z.strictObject({
-    query: z.string().trim().min(1).max(MAX_SEARCH_QUERY_LENGTH).optional(),
-    status: z.enum(ITEM_STATUSES).optional(),
+    query: z
+        .string()
+        .trim()
+        .min(1)
+        .max(MAX_SEARCH_QUERY_LENGTH)
+        .optional()
+        .describe("A word or phrase the item text must contain"),
+    status: z
+        .enum(ITEM_STATUSES)
+        .optional()
+        .describe("Only items with this status"),
     limit: limitArg,
 })
 
