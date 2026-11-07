@@ -338,7 +338,7 @@ One ask event per request, written by `AskService`, for every outcome: `provider
 - Provider unavailable → `LLM_UNAVAILABLE`. Handler throws → `INTERNAL`.
 - Prompt injection: an item whose text says "ignore your instructions" is passed back as data, and no row changes (assert row counts before and after).
 - The ask event is logged on every outcome with the trace, and on failure with the `question` and raw responses. No secrets in logs.
-- `AskPanel`: an answer containing HTML renders as plain text. Playwright: asking, answered and error states (with a stubbed `/api/ask`), a screenshot baseline for the answered state, an axe scan, and the mobile header button scrolling to `#ask`.
+- Playwright: asking, answered and error states (with a stubbed `/api/ask`), a screenshot baseline for the answered state, an axe scan, and the mobile header button scrolling to `#ask`.
 
 ### Build order for this feature
 Same definition of done as below, one step at a time.

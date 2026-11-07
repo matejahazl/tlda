@@ -2,6 +2,7 @@
 
 import { PlannerProvider } from "@/app/context"
 import type { PaginatedMeetings } from "@/types"
+import { AskPanel } from "./AskPanel"
 import { MeetingForm } from "./MeetingForm"
 import { MeetingList } from "./MeetingList"
 
@@ -25,13 +26,27 @@ export function Planner({ initialPage }: PlannerProps) {
                         Paste your meeting notes and get the to-dos.
                     </p>
                 </div>
-                <a className="btn-primary lg:hidden" href="#meeting-form">
-                    New meeting notes
-                </a>
+                <div className="flex flex-wrap gap-[8px] lg:hidden">
+                    <a
+                        className="btn-link bg-accent text-on-accent hover-fine:bg-accent-hover"
+                        href="#meeting-form"
+                    >
+                        New meeting notes
+                    </a>
+                    <a
+                        className="btn-link bg-segment text-ink hover-fine:bg-segment-hover"
+                        href="#ask"
+                    >
+                        Ask about your meetings
+                    </a>
+                </div>
             </header>
             <main className="mx-auto flex max-w-page flex-wrap items-start gap-[32px] px-[32px] pb-[72px]">
                 <MeetingList initialCursor={initialPage.nextCursor} />
-                <MeetingForm />
+                <div className="flex min-w-0 flex-[1_1_360px] flex-col gap-[24px]">
+                    <MeetingForm />
+                    <AskPanel />
+                </div>
             </main>
         </PlannerProvider>
     )

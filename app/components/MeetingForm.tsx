@@ -60,7 +60,7 @@ export function MeetingForm() {
         <aside
             id="meeting-form"
             aria-label="Add meeting notes"
-            className="min-w-0 flex-[1_1_360px] rounded-[16px] bg-card p-[24px] shadow-card"
+            className="rounded-[16px] bg-card p-[24px] shadow-card"
         >
             <form onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
                 <div className="flex flex-col gap-[4px]">

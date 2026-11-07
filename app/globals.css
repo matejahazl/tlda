@@ -156,11 +156,11 @@
         @apply text-[14px] leading-[20px] font-medium;
     }
 
-    .btn-primary {
-        @apply inline-flex min-h-[48px] touch-manipulation items-center justify-center gap-[10px] rounded-[12px] bg-accent px-[20px] text-on-accent no-underline transition duration-160 ease-out;
+    /* a link that looks like a md Button; the color goes on the link */
+    .btn-link {
+        @apply inline-flex min-h-[48px] touch-manipulation items-center justify-center gap-[10px] rounded-[12px] px-[20px] no-underline transition duration-160 ease-out;
         @apply text-[15px] leading-[22px] font-semibold;
-        @apply motion-safe:not-disabled:active:scale-97 hover-fine:not-disabled:not-aria-busy:bg-accent-hover;
-        @apply disabled:not-aria-busy:cursor-not-allowed disabled:not-aria-busy:opacity-50 aria-busy:cursor-progress;
+        @apply motion-safe:active:scale-97;
     }
 
     .field {
