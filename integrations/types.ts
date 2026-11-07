@@ -51,8 +51,9 @@ export type ToolDecl = {
     parameters: Record<string, unknown>
 }
 
-// sources: the meetings this result came from
-export type ToolOutput = { result: unknown; sources: AskSource[] }
+// sources: the meetings this result came from;
+// rows: how many rows it holds, for the log
+export type ToolOutput = { result: unknown; sources: AskSource[]; rows: number }
 
 // A tool as runAgent runs it. The caller (AskService) owns the handlers, so runAgent does no DB work.
 export type AgentTool<Args extends z.ZodType = z.ZodType> = {
@@ -90,8 +91,17 @@ export type ChatResponse = {
 export type AgentFailureReason =
     ProviderFailureReason | "bad_answer" | "tool_error" | "max_turns"
 
+export type ToolCallTrace = {
+    name: string
+    args: unknown
+    ok: boolean
+    rows: number
+    durationMs: number
+}
+
 // What the caller logs for every ask outcome
 export type AgentTrace = {
+    toolCalls: ToolCallTrace[]
     responses: string[] // each raw provider response, verbatim
 }
 

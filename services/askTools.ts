@@ -88,7 +88,11 @@ export function searchItemsTool(db: Db) {
                 .limit(limit)
                 .all()
 
-            return { result: { items: rows }, sources: sourcesOf(rows) }
+            return {
+                result: { items: rows },
+                sources: sourcesOf(rows),
+                rows: rows.length,
+            }
         },
     }
 }
@@ -123,6 +127,7 @@ export function listMeetingsTool(db: Db) {
                         meetingTitle: title,
                     })),
                 ),
+                rows: rows.length,
             }
         },
     }
@@ -149,11 +154,12 @@ export function getMeetingTool(db: Db) {
                 .sync()
 
             if (!meeting) {
-                return { result: { error: "not_found" }, sources: [] }
+                return { result: { error: "not_found" }, sources: [], rows: 0 }
             }
             return {
                 result: meeting,
                 sources: [{ meetingId: meeting.id, title: meeting.title }],
+                rows: 1 + meeting.items.length, // the meeting and its items
             }
         },
     }

@@ -6,12 +6,14 @@ import type {
     AgentMessage,
     AgentResult,
     AgentTool,
+    AgentTrace,
     ChatResponse,
     ExtractionResult,
     LlmProvider,
     LlmResponse,
     ProviderFailureReason,
     ToolCall,
+    ToolCallTrace,
     ToolDecl,
     ToolOutput,
     ToolResult,
@@ -96,7 +98,10 @@ export class LlmIntegrationService {
         const messages: AgentMessage[] = [{ role: "user", text: question }]
         const sources = new Map<number, AskSource>()
         const run = {
-            trace: { responses: [] as string[] },
+            trace: {
+                toolCalls: [] as ToolCallTrace[],
+                responses: [] as string[],
+            },
             usage: { inputTokens: 0, outputTokens: 0 },
             turns: 0,
         }
@@ -145,19 +150,12 @@ export class LlmIntegrationService {
                 // One after another, in order; all results go back in one message
                 const results: ToolResult[] = []
                 for (const call of reply.calls) {
+                    const startedAt = performance.now()
+                    let out: ToolOutput & { ok: boolean }
                     try {
-                        const out = callTool(call, tools)
-                        for (const source of out.sources) {
-                            if (!sources.has(source.meetingId)) {
-                                sources.set(source.meetingId, source)
-                            }
-                        }
-                        results.push({
-                            id: call.id,
-                            name: call.name,
-                            result: out.result,
-                        })
+                        out = callTool(call, tools)
                     } catch (error) {
+                        recordToolCall(run.trace, call, startedAt, false, 0)
                         return {
                             ok: false,
                             reason: "tool_error",
@@ -165,6 +163,17 @@ export class LlmIntegrationService {
                             ...run,
                         }
                     }
+                    recordToolCall(run.trace, call, startedAt, out.ok, out.rows)
+                    for (const source of out.sources) {
+                        if (!sources.has(source.meetingId)) {
+                            sources.set(source.meetingId, source)
+                        }
+                    }
+                    results.push({
+                        id: call.id,
+                        name: call.name,
+                        result: out.result,
+                    })
                 }
                 messages.push(
                     { role: "model", calls: reply.calls },
@@ -179,11 +188,19 @@ export class LlmIntegrationService {
 }
 
 // An unknown tool or bad args goes back to the model so it can fix the call. Only a handler that throws ends the run.
-function callTool(call: ToolCall, tools: AgentTool[]): ToolOutput {
+function callTool(
+    call: ToolCall,
+    tools: AgentTool[],
+): ToolOutput & { ok: boolean } {
     const tool = tools.find((t) => t.name === call.name)
     if (!tool) {
         const names = tools.map((t) => t.name)
-        return { result: { error: "unknown_tool", tools: names }, sources: [] }
+        return {
+            ok: false,
+            result: { error: "unknown_tool", tools: names },
+            sources: [],
+            rows: 0,
+        }
     }
 
     const args = tool.args.safeParse(call.args)
@@ -193,10 +210,31 @@ function callTool(call: ToolCall, tools: AgentTool[]): ToolOutput {
             path,
             message,
         }))
-        return { result: { error: "invalid_args", issues }, sources: [] }
+        return {
+            ok: false,
+            result: { error: "invalid_args", issues },
+            sources: [],
+            rows: 0,
+        }
     }
 
-    return tool.handler(args.data)
+    return { ok: true, ...tool.handler(args.data) }
+}
+
+function recordToolCall(
+    trace: AgentTrace,
+    call: ToolCall,
+    startedAt: number,
+    ok: boolean,
+    rows: number,
+): void {
+    trace.toolCalls.push({
+        name: call.name,
+        args: call.args,
+        ok,
+        rows,
+        durationMs: Math.round(performance.now() - startedAt),
+    })
 }
 
 function providerFailureReason(

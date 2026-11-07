@@ -184,6 +184,7 @@ describe("get_meeting", () => {
         expect(get({ id: 999 })).toEqual({
             result: { error: "not_found" },
             sources: [],
+            rows: 0,
         })
     })
 })
