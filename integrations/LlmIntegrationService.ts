@@ -1,17 +1,23 @@
 import "server-only"
+import { z } from "zod"
 import { llmOutputSchema } from "@/lib/schemas"
+import type { AskSource } from "@/types"
 import type {
     AgentMessage,
     AgentResult,
+    AgentTool,
     ChatResponse,
     ExtractionResult,
     LlmProvider,
     LlmResponse,
     ProviderFailureReason,
+    ToolDecl,
+    ToolResult,
 } from "./types"
 
 const LLM_TIMEOUT_MS = 30_000
 export const MAX_ANSWER_LENGTH = 2000 // max characters in an ask answer, after trimming
+export const MAX_SOURCES = 5 // max meetings listed under an answer
 const JSON_FENCE = /^```(?:json)?[ \t]*\r?\n([\s\S]*?)\r?\n?```$/i // one optional fence around the whole reply
 
 // The notes go inside <notes> delimiters and are treated as data only (prompt injection guard)
@@ -71,41 +77,100 @@ export class LlmIntegrationService {
         return parseReply(response)
     }
 
-    async runAgent({ question }: { question: string }): Promise<AgentResult> {
+    async runAgent({
+        question,
+        tools,
+    }: {
+        question: string
+        tools: AgentTool[]
+    }): Promise<AgentResult> {
         // shortcut: no timer yet, the 30s timeout comes in build step 11
         const controller = new AbortController()
+        const decls: ToolDecl[] = tools.map(({ name, description, args }) => ({
+            name,
+            description,
+            parameters: z.toJSONSchema(args, { io: "input" }), // input: defaulted args stay optional
+        }))
         const messages: AgentMessage[] = [{ role: "user", text: question }]
+        const sources = new Map<number, AskSource>()
         const run = {
             trace: { responses: [] as string[] },
             usage: { inputTokens: 0, outputTokens: 0 },
-            turns: 1,
+            turns: 0,
         }
 
-        let response: ChatResponse
-        try {
-            response = await this.provider.chat(
-                { system: AGENT_SYSTEM_PROMPT, messages, tools: [] },
-                { signal: controller.signal },
-            )
-        } catch (error) {
-            return {
-                ok: false,
-                reason: providerFailureReason(error, controller.signal.aborted),
-                cause: error,
-                ...run,
+        // shortcut: no turn cap yet, MAX_AGENT_TURNS comes in build step 11
+        for (;;) {
+            run.turns++
+            let response: ChatResponse
+            try {
+                response = await this.provider.chat(
+                    { system: AGENT_SYSTEM_PROMPT, messages, tools: decls },
+                    { signal: controller.signal },
+                )
+            } catch (error) {
+                return {
+                    ok: false,
+                    reason: providerFailureReason(
+                        error,
+                        controller.signal.aborted,
+                    ),
+                    cause: error,
+                    ...run,
+                }
             }
-        }
-        run.trace.responses.push(response.raw)
-        run.usage.inputTokens += response.usage?.inputTokens ?? 0
-        run.usage.outputTokens += response.usage?.outputTokens ?? 0
+            run.trace.responses.push(response.raw)
+            run.usage.inputTokens += response.usage?.inputTokens ?? 0
+            run.usage.outputTokens += response.usage?.outputTokens ?? 0
 
-        // shortcut: tool calls are not run yet, they come in build step 9
-        const answer =
-            response.reply.kind === "text" ? response.reply.text.trim() : ""
-        if (!answer || answer.length > MAX_ANSWER_LENGTH) {
-            return { ok: false, reason: "bad_answer", ...run }
+            const { reply } = response
+            if (reply.kind === "text") {
+                const answer = reply.text.trim()
+                if (!answer || answer.length > MAX_ANSWER_LENGTH) {
+                    return { ok: false, reason: "bad_answer", ...run }
+                }
+                return {
+                    ok: true,
+                    answer,
+                    sources: [...sources.values()].slice(0, MAX_SOURCES),
+                    ...run,
+                }
+            }
+
+            // One after another, in order; all results go back in one message
+            const results: ToolResult[] = []
+            for (const call of reply.calls) {
+                try {
+                    // shortcut: an unknown tool or bad args is a tool_error for now; build step 10 sends them back to the model
+                    const tool = tools.find((t) => t.name === call.name)
+                    if (!tool) {
+                        throw new Error(`Unknown tool: ${call.name}`)
+                    }
+                    const out = tool.handler(tool.args.parse(call.args))
+                    for (const source of out.sources) {
+                        if (!sources.has(source.meetingId)) {
+                            sources.set(source.meetingId, source)
+                        }
+                    }
+                    results.push({
+                        id: call.id,
+                        name: call.name,
+                        result: out.result,
+                    })
+                } catch (error) {
+                    return {
+                        ok: false,
+                        reason: "tool_error",
+                        cause: error,
+                        ...run,
+                    }
+                }
+            }
+            messages.push(
+                { role: "model", calls: reply.calls },
+                { role: "tool", results },
+            )
         }
-        return { ok: true, answer, sources: [], ...run }
     }
 }
 

@@ -3,12 +3,16 @@ import { PATCH } from "@/app/api/action-items/[id]/route"
 import { POST as ASK } from "@/app/api/ask/route"
 import { DELETE } from "@/app/api/meetings/[id]/route"
 import { GET, POST } from "@/app/api/meetings/route"
+import type { ChatRequest } from "@/integrations"
 import {
     LlmIntegrationService,
     LlmUnavailableError,
     MockProvider,
 } from "@/integrations"
-import { MAX_ANSWER_LENGTH } from "@/integrations/LlmIntegrationService"
+import {
+    MAX_ANSWER_LENGTH,
+    MAX_SOURCES,
+} from "@/integrations/LlmIntegrationService"
 import type { MockChatStep } from "@/integrations/providers/MockProvider"
 import {
     MAX_ITEM_TEXT_LENGTH,
@@ -67,6 +71,7 @@ function useLlm(handler: Handler) {
 
 function scriptAgent(script: MockChatStep[]) {
     state.askService = new AskService(
+        state.db,
         new LlmIntegrationService(new MockProvider(undefined, script), {
             provider: "mock",
             model: "test-model",
@@ -106,6 +111,18 @@ function rowCounts() {
         meetings: state.db.select().from(meetings).all().length,
         items: state.db.select().from(actionItems).all().length,
     }
+}
+
+function seedMeeting(title: string, texts: string[] = []) {
+    const { id } = state.db
+        .insert(meetings)
+        .values({ title, notes: "raw notes" })
+        .returning({ id: meetings.id })
+        .get()
+    for (const text of texts) {
+        state.db.insert(actionItems).values({ meetingId: id, text }).run()
+    }
+    return id
 }
 
 const find = (message: string) => state.logs.find((l) => l.msg === message)
@@ -461,6 +478,109 @@ describe("POST /api/ask", () => {
             answer: "Two items are open.",
             sources: [],
         })
+    })
+
+    it("runs the tool calls in order, sends the results back and answers with the sources", async () => {
+        const pricing = seedMeeting("Pricing review", [
+            "Update the pricing page",
+        ])
+        const sync = seedMeeting("Weekly sync", ["Book the room"])
+        const calls = [
+            { id: "c1", name: "search_items", args: { query: "pricing" } },
+            { id: "c2", name: "list_meetings", args: {} },
+        ]
+        let seen: ChatRequest | undefined
+        scriptAgent([
+            { kind: "tool_calls", calls },
+            (request) => {
+                seen = request
+                return { kind: "text", text: "The pricing page is open." }
+            },
+        ])
+        const res = await ask({ question: "What about pricing?" })
+
+        expect(seen?.messages.slice(1)).toEqual([
+            { role: "model", calls },
+            {
+                role: "tool",
+                results: [
+                    {
+                        id: "c1",
+                        name: "search_items",
+                        result: {
+                            items: [
+                                expect.objectContaining({
+                                    text: "Update the pricing page",
+                                }),
+                            ],
+                        },
+                    },
+                    {
+                        id: "c2",
+                        name: "list_meetings",
+                        result: { meetings: expect.any(Array) },
+                    },
+                ],
+            },
+        ])
+        expect(await res.json()).toEqual({
+            answer: "The pricing page is open.",
+            // unique, in first-seen order: search_items found pricing first
+            sources: [
+                { meetingId: pricing, title: "Pricing review" },
+                { meetingId: sync, title: "Weekly sync" },
+            ],
+        })
+    })
+
+    it("declares every tool with the schema of the args the model may send", async () => {
+        let tools: ChatRequest["tools"] = []
+        scriptAgent([
+            (request) => {
+                tools = request.tools
+                return { kind: "text", text: "Done." }
+            },
+        ])
+        await ask({ question: "What's open?" })
+
+        expect(tools.map((tool) => tool.name)).toEqual([
+            "search_items",
+            "list_meetings",
+            "get_meeting",
+        ])
+        const required = tools.map((tool) => tool.parameters.required ?? [])
+        expect(required).toEqual([[], [], ["id"]]) // a defaulted limit stays optional
+    })
+
+    it(`lists at most ${MAX_SOURCES} source meetings`, async () => {
+        for (let i = 0; i <= MAX_SOURCES; i++) {
+            seedMeeting(`Meeting ${i}`)
+        }
+        scriptAgent([
+            {
+                kind: "tool_calls",
+                calls: [{ id: "c1", name: "list_meetings", args: {} }],
+            },
+            { kind: "text", text: "You have six meetings." },
+        ])
+        const { sources } = await (await ask({ question: "How many?" })).json()
+
+        expect(sources).toHaveLength(MAX_SOURCES)
+    })
+
+    it("returns INTERNAL when a tool handler throws", async () => {
+        state.db.$client.close() // any query now throws
+        scriptAgent([
+            {
+                kind: "tool_calls",
+                calls: [{ id: "c1", name: "list_meetings", args: {} }],
+            },
+            { kind: "text", text: "Only reached if the handler worked." },
+        ])
+        const res = await ask({ question: "What's open?" })
+
+        expect(res.status).toBe(500)
+        expect((await res.json()).error.code).toBe("INTERNAL")
     })
 
     it("keeps line breaks and accepts an answer of the maximum length", async () => {

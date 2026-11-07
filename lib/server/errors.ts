@@ -14,4 +14,5 @@ export const LLM_FAILURE_CODES: Record<
     schema_mismatch: "LLM_BAD_OUTPUT",
     prose: "LLM_BAD_OUTPUT",
     bad_answer: "LLM_BAD_OUTPUT",
+    tool_error: "INTERNAL",
 }
