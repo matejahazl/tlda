@@ -3,7 +3,7 @@ import { PATCH } from "@/app/api/action-items/[id]/route"
 import { POST as ASK } from "@/app/api/ask/route"
 import { DELETE } from "@/app/api/meetings/[id]/route"
 import { GET, POST } from "@/app/api/meetings/route"
-import type { ChatRequest } from "@/integrations"
+import type { AgentMessage, ChatRequest } from "@/integrations"
 import {
     LlmIntegrationService,
     LlmUnavailableError,
@@ -25,6 +25,7 @@ import { createDb, type Db } from "@/lib/server/db"
 import { actionItems, meetings } from "@/lib/server/db/schema"
 import type * as LoggerModule from "@/lib/server/logger"
 import { AskService } from "@/services/AskService"
+import { MAX_SEARCH_QUERY_LENGTH } from "@/services/askTools"
 import { MeetingService } from "@/services/MeetingService"
 
 type Handler = ConstructorParameters<typeof MockProvider>[0]
@@ -550,6 +551,92 @@ describe("POST /api/ask", () => {
         ])
         const required = tools.map((tool) => tool.parameters.required ?? [])
         expect(required).toEqual([[], [], ["id"]]) // a defaulted limit stays optional
+    })
+
+    it("sends an unknown tool back to the model with the tool names, and it recovers", async () => {
+        let seen: ChatRequest | undefined
+        scriptAgent([
+            {
+                kind: "tool_calls",
+                calls: [{ id: "c1", name: "delete_meeting", args: { id: 1 } }],
+            },
+            (request) => {
+                seen = request
+                return { kind: "text", text: "You have no meetings." }
+            },
+        ])
+        const res = await ask({ question: "Delete my meetings" })
+
+        expect(seen?.messages.at(-1)).toEqual({
+            role: "tool",
+            results: [
+                {
+                    id: "c1",
+                    name: "delete_meeting",
+                    result: {
+                        error: "unknown_tool",
+                        tools: ["search_items", "list_meetings", "get_meeting"],
+                    },
+                },
+            ],
+        })
+        expect(res.status).toBe(200)
+    })
+
+    it("sends invalid args back as issue paths without the values, and the model recovers", async () => {
+        const id = seedMeeting("Pricing review", ["Update the pricing page"])
+        const badQuery = "x".repeat(MAX_SEARCH_QUERY_LENGTH + 1)
+        let toolMessage: AgentMessage | undefined
+        scriptAgent([
+            {
+                kind: "tool_calls",
+                calls: [
+                    {
+                        id: "c1",
+                        name: "search_items",
+                        args: { query: badQuery, status: "closed" },
+                    },
+                ],
+            },
+            (request) => {
+                toolMessage = request.messages.at(-1) // read now: runAgent keeps appending to messages
+                return {
+                    kind: "tool_calls",
+                    calls: [
+                        {
+                            id: "c2",
+                            name: "search_items",
+                            args: { query: "pricing" },
+                        },
+                    ],
+                }
+            },
+            { kind: "text", text: "Update the pricing page is open." },
+        ])
+        const res = await ask({ question: "What about pricing?" })
+
+        expect(toolMessage).toEqual({
+            role: "tool",
+            results: [
+                { id: "c1", name: "search_items", result: expect.anything() },
+            ],
+        })
+        const [{ result }] = (
+            toolMessage as Extract<AgentMessage, { role: "tool" }>
+        ).results
+        expect(result).toEqual({
+            error: "invalid_args",
+            issues: [
+                { path: ["query"], message: expect.any(String) },
+                { path: ["status"], message: expect.any(String) },
+            ],
+        })
+        expect(JSON.stringify(result)).not.toContain("xxxxx")
+        expect(JSON.stringify(result)).not.toContain("closed")
+        expect(await res.json()).toEqual({
+            answer: "Update the pricing page is open.",
+            sources: [{ meetingId: id, title: "Pricing review" }], // only from the call that worked
+        })
     })
 
     it(`lists at most ${MAX_SOURCES} source meetings`, async () => {

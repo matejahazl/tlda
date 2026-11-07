@@ -11,7 +11,9 @@ import type {
     LlmProvider,
     LlmResponse,
     ProviderFailureReason,
+    ToolCall,
     ToolDecl,
+    ToolOutput,
     ToolResult,
 } from "./types"
 
@@ -141,12 +143,7 @@ export class LlmIntegrationService {
             const results: ToolResult[] = []
             for (const call of reply.calls) {
                 try {
-                    // shortcut: an unknown tool or bad args is a tool_error for now; build step 10 sends them back to the model
-                    const tool = tools.find((t) => t.name === call.name)
-                    if (!tool) {
-                        throw new Error(`Unknown tool: ${call.name}`)
-                    }
-                    const out = tool.handler(tool.args.parse(call.args))
+                    const out = callTool(call, tools)
                     for (const source of out.sources) {
                         if (!sources.has(source.meetingId)) {
                             sources.set(source.meetingId, source)
@@ -172,6 +169,27 @@ export class LlmIntegrationService {
             )
         }
     }
+}
+
+// An unknown tool or bad args goes back to the model so it can fix the call. Only a handler that throws ends the run.
+function callTool(call: ToolCall, tools: AgentTool[]): ToolOutput {
+    const tool = tools.find((t) => t.name === call.name)
+    if (!tool) {
+        const names = tools.map((t) => t.name)
+        return { result: { error: "unknown_tool", tools: names }, sources: [] }
+    }
+
+    const args = tool.args.safeParse(call.args)
+    if (!args.success) {
+        // paths and messages only, never the values the model sent
+        const issues = args.error.issues.map(({ path, message }) => ({
+            path,
+            message,
+        }))
+        return { result: { error: "invalid_args", issues }, sources: [] }
+    }
+
+    return tool.handler(args.data)
 }
 
 function providerFailureReason(

@@ -8,7 +8,7 @@ import type { AskSource } from "@/types"
 
 const MAX_TOOL_ROWS = 50 // max rows one tool call returns, so a result can't flood the context
 const DEFAULT_TOOL_ROWS = 20 // rows returned when the model gives no limit
-const MAX_SEARCH_QUERY_LENGTH = 100 // max characters in a search_items query
+export const MAX_SEARCH_QUERY_LENGTH = 100 // max characters in a search_items query
 
 const limitArg = z
     .number()

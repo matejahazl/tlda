@@ -51,13 +51,15 @@ export type ToolDecl = {
     parameters: Record<string, unknown>
 }
 
+// sources: the meetings this result came from
+export type ToolOutput = { result: unknown; sources: AskSource[] }
+
 // A tool as runAgent runs it. The caller (AskService) owns the handlers, so runAgent does no DB work.
 export type AgentTool<Args extends z.ZodType = z.ZodType> = {
     name: string
     description: string
     args: Args
-    // sources: the meetings this result came from
-    handler(args: z.output<Args>): { result: unknown; sources: AskSource[] }
+    handler(args: z.output<Args>): ToolOutput
 }
 
 // runAgent validates args with the tool's zod schema
