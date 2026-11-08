@@ -60,7 +60,8 @@ Things deliberately left out of the first version because they are out of scope 
 - **Meeting list pagination is keyset by id, with no total cap.** `GET /api/meetings?cursor=<nextCursor>` returns 5 meetings and the `nextCursor` for the following page (null on the last). There is no total count, so the UI shows no "X of Y".
 - **No edit of meetings or items, and no delete of single items.** There is no way to correct a wrong extraction (edit text, add a missed item, remove a bad one). Only whole meetings can be deleted.
 - **Deleting a meeting is permanent.** No undo, soft delete or trash. The confirm dialog is the only safeguard.
-- **No concurrent-edit protection** on status changes (last write wins).
+- **No concurrent-edit protection** on status changes (last write wins). Two fast clicks on one item send two requests; if their responses come back in the opposite order, the UI can show a different status than the database until a reload.
+  - Real fix: in `usePatchItem`, count requests per item and ignore any response that isn't from the latest one.
 - **SQLite is single-writer and file-based.** Fine locally; not suited to several app instances.
   - Real fix: Postgres, with migrations run as a deploy step.
 - **Migrations are not tested** against an existing database with data.
