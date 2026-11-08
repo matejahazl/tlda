@@ -10,12 +10,25 @@ import {
 
 const NOTES = "Alice will send the report to Bob by Friday."
 
-describe("createMeetingSchema", () => {
-    it("strips control characters but keeps newlines and tabs", () => {
-        const parsed = createMeetingSchema.parse({
-            notes: `${NOTES}\n\tNext line\u0000\u0007\u001b[0m\u007f`,
+describe("cleanText", () => {
+    const DIRTY = " Weekly\u0000\u0007 sync\u001b\u007f " // control characters and outer spaces
+    const CLEAN = "Weekly sync"
+
+    it("strips control characters and trims every text field", () => {
+        const meeting = createMeetingSchema.parse({
+            title: DIRTY,
+            notes: `${NOTES}\n\tNext line${DIRTY}`,
         })
-        expect(parsed.notes).toBe(`${NOTES}\n\tNext line[0m`)
+        const output = llmOutputSchema.parse({
+            title: DIRTY,
+            items: [{ text: DIRTY }, { text: CLEAN }],
+        })
+
+        expect(meeting.title).toBe(CLEAN)
+        expect(meeting.notes).toBe(`${NOTES}\n\tNext line ${CLEAN}`) // newlines and tabs stay
+        expect(askSchema.parse({ question: DIRTY }).question).toBe(CLEAN)
+        expect(output.title).toBe(CLEAN)
+        expect(output.items).toEqual([{ text: CLEAN }]) // cleaned before the dedupe
     })
 })
 

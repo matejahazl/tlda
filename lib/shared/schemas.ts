@@ -91,7 +91,7 @@ export const idSchema = z
     .string()
     .regex(/^[1-9]\d*$/, "Invalid id")
     .transform(Number)
-    .pipe(z.number().int().safe())
+    .pipe(z.number().int())
 
 export const listMeetingsQuerySchema = z.strictObject({
     cursor: idSchema.optional(),
@@ -100,10 +100,14 @@ export const listMeetingsQuerySchema = z.strictObject({
 const llmItemSchema = z.object({
     text: z
         .string()
-        .trim()
-        .min(1)
-        .max(MAX_ITEM_TEXT_LENGTH)
-        .refine(isSingleLine, "Item text must be a single line"),
+        .transform(cleanText)
+        .pipe(
+            z
+                .string()
+                .min(1)
+                .max(MAX_ITEM_TEXT_LENGTH)
+                .refine(isSingleLine, "Item text must be a single line"),
+        ),
 })
 
 export const llmOutputSchema = z.object({
