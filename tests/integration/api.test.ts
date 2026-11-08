@@ -233,9 +233,22 @@ describe("meeting title", () => {
     })
 })
 
+describe("fenced LLM output", () => {
+    it("accepts one ```json fence around the whole reply", async () => {
+        mockExtraction(() => `\`\`\`json\n${GOOD_REPLY}\n\`\`\``)
+        const res = await postMeeting({ notes: NOTES })
+
+        expect(res.status).toBe(201)
+        expect((await res.json()).items).toHaveLength(2)
+    })
+})
+
 describe("unusable LLM output", () => {
     const longItem = JSON.stringify({
         items: [{ text: "a".repeat(MAX_ITEM_TEXT_LENGTH + 1) }],
+    })
+    const multiLineItem = JSON.stringify({
+        items: [{ text: "Send the report\nand book the room" }],
     })
     const cases: [string, string, string][] = [
         [
@@ -258,7 +271,13 @@ describe("unusable LLM output", () => {
             JSON.stringify({ tasks: ["a"] }),
             "schema_mismatch",
         ],
+        [
+            "text around a fence",
+            `Here you go:\n\`\`\`json\n${GOOD_REPLY}\n\`\`\``,
+            "not_json",
+        ],
         ["an over-long item", longItem, "prose"],
+        ["a multi-line item", multiLineItem, "prose"],
     ]
 
     it.each(cases)(
