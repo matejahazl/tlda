@@ -1,7 +1,7 @@
 import "server-only"
 import { z } from "zod"
 
-const LLM_PROVIDERS = ["gemini", "mock"] as const
+const LLM_PROVIDERS = ["gemini", "claude", "mock"] as const
 const LOG_LEVELS = ["debug", "info", "warn", "error"] as const
 
 const blankToUndefined = (value: unknown) => (value === "" ? undefined : value)

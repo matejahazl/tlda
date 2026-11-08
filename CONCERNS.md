@@ -35,7 +35,7 @@ Things deliberately left out of the first version because they are out of scope 
 - **No fallback provider.** If the chosen provider is down or rate-limited, extraction fails. Free tiers change quotas and models without notice.
   - Real fix: ordered provider fallback in `LlmIntegrationService`, with circuit-breaking.
 - **Only one real provider.** Gemini is the only real provider; the OpenAI-compatible one (Groq / OpenRouter / Ollama) was planned but dropped to keep scope small.
-  - Real fix: add one class implementing `LlmProvider` plus a factory entry and its env vars (for example `LLM_BASE_URL`). Nothing else changes.
+  - Real fix: add one class extending `LlmProvider` plus a factory entry and its env vars (for example `LLM_BASE_URL`). Nothing else changes.
 - **No language handling.** Notes in other languages are sent as-is; quality and the prose check were only designed with English in mind.
 
 ## Ask agent

@@ -1,16 +1,16 @@
 import "server-only"
 import { MAX_ITEM_TEXT_LENGTH, MAX_ITEMS } from "@/lib/schemas"
+import { LlmProvider } from "../LlmProvider"
 import type {
     ChatRequest,
     ChatResponse,
-    LlmProvider,
-    LlmRequest,
-    LlmResponse,
+    CompleteRequest,
+    CompleteResponse,
 } from "../types"
 
-type MockCompleteReply = string | LlmResponse
+type MockCompleteReply = string | CompleteResponse
 export type MockCompleteHandler = (
-    request: LlmRequest,
+    request: CompleteRequest,
     opts: { signal: AbortSignal },
 ) => MockCompleteReply | Promise<MockCompleteReply>
 
@@ -30,12 +30,14 @@ type MockFakes = {
 }
 
 // Tests pass fakes to script any reply or failure. Without them it fakes plausible replies.
-export class MockProvider implements LlmProvider {
+export class MockProvider extends LlmProvider {
     private turn = 0
 
-    constructor(private readonly fakes: MockFakes = {}) {}
+    constructor(private readonly fakes: MockFakes = {}) {
+        super()
+    }
 
-    async complete(request: LlmRequest, opts: { signal: AbortSignal }) {
+    async complete(request: CompleteRequest, opts: { signal: AbortSignal }) {
         const fake = this.fakes.complete ?? extractFromLines
         const reply = await fake(request, opts)
 
@@ -63,7 +65,7 @@ export class MockProvider implements LlmProvider {
     }
 }
 
-function extractFromLines(request: LlmRequest): string {
+function extractFromLines(request: CompleteRequest): string {
     const items = request.user
         .split("\n")
         .map((line) => line.trim())

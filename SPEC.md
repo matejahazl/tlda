@@ -233,15 +233,15 @@ Order in POST: validate → LLM call → validate LLM output → transaction. A 
 
 ## LLM integration (swappable)
 ```ts
-interface LlmProvider {
-  complete(
+abstract class LlmProvider { // integrations/LlmProvider.ts
+  abstract complete(
     // responseSchema: a standard JSON schema the reply must match (JSON mode); extraction sends it with maxOutputTokens
     request: { system: string; user: string; responseSchema?: object; maxOutputTokens?: number },
     opts: { signal: AbortSignal },
   ): Promise<{ text: string; usage?: { inputTokens?: number; outputTokens?: number } }>;
 
   // one turn of a tool-using conversation (used by the ask agent only)
-  chat(
+  abstract chat(
     request: { system: string; messages: AgentMessage[]; tools: ToolDecl[]; maxOutputTokens?: number },
     opts: { signal: AbortSignal },
   ): Promise<{
@@ -252,7 +252,7 @@ interface LlmProvider {
 }
 ```
 `AgentMessage`, `ToolDecl` (`name`, `description`, JSON-schema `parameters`) and `ToolCall` (`id`, `name`, `args: unknown`, an optional opaque `signature` the provider needs back unchanged, such as Gemini's thought signature) are our own neutral types in `integrations/types.ts`. Each provider translates them to and from its own wire format, so no provider type leaks out of `integrations/providers/`.
-- Implementations (in `integrations/providers/`): `GeminiProvider` and `MockProvider` (tests and offline dev). Another provider is one class implementing `LlmProvider` plus one factory entry.
+- Implementations (in `integrations/providers/`): `GeminiProvider` and `MockProvider` (tests and offline dev). Another provider is one class extending `LlmProvider` plus one factory entry.
 - A factory picks the provider from env: `LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY`.
 - `LlmIntegrationService` (`integrations/`) wraps the active provider and owns: the prompt, the timeout, JSON parsing and zod validation. Providers only make the HTTP call and return the raw text plus token usage, so the verbatim response can always be logged. The service never throws, logs or touches the database: it returns a success or a failure with a `reason`. `MeetingService` logs the extraction event and maps the reason to an error code with the `LLM_FAILURE_CODES` lookup table in `lib/server/errors.ts` (server-only error mappings, reusable by any service). A valid empty list is a meeting rule, not an LLM failure, so `MeetingService` throws `NO_ACTION_ITEMS` itself.
 - A timeout needs no provider error: `LlmIntegrationService` aborts the call and reports `LLM_TIMEOUT`, so a provider just lets the abort propagate. Providers map provider 5xx, network errors and 429 to `LlmUnavailableError` (-> `LLM_UNAVAILABLE`), so API error codes never change when swapping providers. A blocked or empty reply is returned as the raw provider response, which then fails validation (-> `LLM_BAD_OUTPUT`) and is logged verbatim.
@@ -366,14 +366,14 @@ Same definition of done as below, one step at a time.
 16. `AskPanel` (idle and answered) in the side column, and the mobile "Ask about your meetings" header button in `Planner`.
 17. `AskPanel` asking and error states, hint and live region.
 18. Playwright tests, screenshot baseline and axe scan.
-19. Refactor: make `complete()` generic. `LlmRequest` gains optional `responseSchema` (standard JSON schema) and `maxOutputTokens`; the extraction schema and token limit move from `GeminiProvider` to `LlmIntegrationService`, and `GeminiProvider` passes them through (try `responseJsonSchema`). No test covers the Gemini request body, so check with a real extraction via `curl`.
+19. Refactor: make `complete()` generic. `CompleteRequest` gains optional `responseSchema` (standard JSON schema) and `maxOutputTokens`; the extraction schema and token limit move from `GeminiProvider` to `LlmIntegrationService`, and `GeminiProvider` passes them through (try `responseJsonSchema`). No test covers the Gemini request body, so check with a real extraction via `curl`.
 
 ## Suggested build order
 Definition of done for every step: the tests for that step pass, `npm run lint` has no errors (review any warnings), and `next build` succeeds. Stop and report before starting the next step.
 
 1. Scaffold Next.js + Tailwind + TS; add zod, drizzle, better-sqlite3, pino, vitest, and the ESLint/Prettier setup from "Linting and formatting" (then run `npm run format` once). Set the dev/start scripts to bind to `127.0.0.1`, and add the security headers and `serverExternalPackages` to `next.config`.
 2. Schemas, env validation, DB schema + migration, error classes, `withApi`, logger.
-3. `LlmProvider` interface + `MockProvider` + `LlmIntegrationService`; `MeetingService`; endpoints against the mock; tests.
+3. `LlmProvider` base class + `MockProvider` + `LlmIntegrationService`; `MeetingService`; endpoints against the mock; tests.
 4. Frontend from the design reference; wire optimistic status changes, processing and error states.
 5. `GeminiProvider` + env config; try the real flow end to end.
 6. README: setup, env vars, how to swap providers, how to run tests, and a pointer to `CONCERNS.md`. Run `npm audit` and fix or note anything serious.

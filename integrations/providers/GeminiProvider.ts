@@ -1,12 +1,13 @@
 import "server-only"
 import { LlmUnavailableError } from "../LlmIntegrationService"
+import { LlmProvider } from "../LlmProvider"
 import type {
     AgentMessage,
     ChatRequest,
     ChatResponse,
-    LlmProvider,
-    LlmRequest,
-    LlmResponse,
+    CompleteRequest,
+    CompleteResponse,
+    LlmUsage,
     ToolCall,
 } from "../types"
 
@@ -29,16 +30,18 @@ type GeminiReply = {
 }
 
 // Plain fetch on the REST API: no SDK dependency, and Node reuses connections between calls
-export class GeminiProvider implements LlmProvider {
+export class GeminiProvider extends LlmProvider {
     constructor(
         private readonly apiKey: string,
         private readonly model: string,
-    ) {}
+    ) {
+        super()
+    }
 
     async complete(
-        request: LlmRequest,
+        request: CompleteRequest,
         opts: { signal: AbortSignal },
-    ): Promise<LlmResponse> {
+    ): Promise<CompleteResponse> {
         const raw = await this.generate(
             {
                 systemInstruction: { parts: [{ text: request.system }] },
@@ -194,7 +197,7 @@ function replyText(reply: GeminiReply): string {
         .join("")
 }
 
-function usageOf(reply: GeminiReply): LlmResponse["usage"] {
+function usageOf(reply: GeminiReply): LlmUsage {
     return {
         inputTokens: reply.usageMetadata?.promptTokenCount,
         outputTokens: reply.usageMetadata?.candidatesTokenCount,

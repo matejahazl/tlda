@@ -38,6 +38,22 @@ LLM_API_KEY=your-key
 
 Restart `npm run dev` after changing `.env`. With thinking set to minimal (in `integrations/providers/GeminiProvider.ts`), `gemini-3.5-flash-lite` extracts in about 1 second; a question takes several seconds, since it needs 2 to 3 model turns.
 
+## Use Claude instead
+
+Get a key from the [Claude Console](https://platform.claude.com/) and set in `.env`:
+
+```
+LLM_PROVIDER=claude
+LLM_MODEL=claude-opus-5-5
+LLM_API_KEY=your-key
+```
+
+`claude-haiku-5-5` is the faster, cheaper option. Current Claude models can't turn thinking off, so `integrations/providers/ClaudeProvider.ts` sends effort `low` and no temperature (both rejected or replaced on these models). It uses the official `@anthropic-ai/sdk` with retries off.
+
+## Swap providers
+
+A provider is one class extending `LlmProvider` in `integrations/providers/`, one entry in `PROVIDER_FACTORIES` (`integrations/index.ts`) and one value in `LLM_PROVIDERS` (`lib/server/env.ts`).
+
 ## Other commands
 
 ```bash

@@ -2,33 +2,21 @@ import type { z } from "zod"
 import type { llmOutputSchema } from "@/lib/schemas"
 import type { AskSource } from "@/types"
 
-// Providers only make the HTTP call. Prompt, parsing, validation and the timeout live in LlmIntegrationService.
-export interface LlmProvider {
-    complete(
-        request: LlmRequest,
-        opts: { signal: AbortSignal },
-    ): Promise<LlmResponse>
-
-    // one turn of a tool-using conversation (used by the ask agent only)
-    chat(
-        request: ChatRequest,
-        opts: { signal: AbortSignal },
-    ): Promise<ChatResponse>
-}
-
 export type ProviderFailureReason =
     "timeout" | "provider_unavailable" | "provider_error"
 
-export type LlmRequest = {
+export type CompleteRequest = {
     system: string // instructions
     user: string // the input, e.g. the notes
     responseSchema?: Record<string, unknown> // a standard JSON schema; asks for a JSON reply of this shape
     maxOutputTokens?: number
 }
 
-export type LlmResponse = {
+export type LlmUsage = { inputTokens?: number; outputTokens?: number } // token counts, shared by complete() and chat()
+
+export type CompleteResponse = {
     text: string
-    usage?: { inputTokens?: number; outputTokens?: number }
+    usage?: LlmUsage
 }
 
 export type Extraction = z.output<typeof llmOutputSchema>
@@ -38,11 +26,11 @@ export type FailureReason =
 
 // Never throws: the caller logs the outcome (including the raw response) and decides the error
 export type ExtractionResult =
-    | { ok: true; extraction: Extraction; response: LlmResponse }
+    | { ok: true; extraction: Extraction; response: CompleteResponse }
     | {
           ok: false
           reason: FailureReason
-          response?: LlmResponse // missing when the call failed before a reply
+          response?: CompleteResponse // missing when the call failed before a reply
           cause?: unknown // the provider error, for the log only
       }
 
@@ -93,7 +81,7 @@ export type ChatResponse = {
         | { kind: "text"; text: string }
         | { kind: "tool_calls"; calls: ToolCall[] }
     raw: string // the provider's response body, verbatim, for the log
-    usage?: LlmResponse["usage"]
+    usage?: LlmUsage
 }
 
 export type AgentFailureReason =

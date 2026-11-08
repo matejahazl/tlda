@@ -2,15 +2,15 @@ import "server-only"
 import { z } from "zod"
 import { llmOutputSchema } from "@/lib/schemas"
 import type { AskSource } from "@/types"
+import type { LlmProvider } from "./LlmProvider"
 import type {
     AgentMessage,
     AgentResult,
     AgentTool,
     AgentTrace,
     ChatResponse,
+    CompleteResponse,
     ExtractionResult,
-    LlmProvider,
-    LlmResponse,
     ProviderFailureReason,
     ToolCall,
     ToolCallTrace,
@@ -23,8 +23,6 @@ import type {
 const EXTRACTION_TIMEOUT_MS = 30_000 // one timer for the whole call
 const EXTRACTION_MAX_OUTPUT_TOKENS = 600 // the reply is a short JSON list
 const EXTRACTION_JSON_FENCE = /^```(?:json)?[ \t]*\r?\n([\s\S]*?)\r?\n?```$/i // one optional fence around the whole reply
-
-// Send the JSON shape to make sure the model returns correctly formatted data
 const EXTRACTION_RESPONSE_SCHEMA = {
     type: "object",
     properties: {
@@ -35,11 +33,13 @@ const EXTRACTION_RESPONSE_SCHEMA = {
                 type: "object",
                 properties: { text: { type: "string" } },
                 required: ["text"],
+                additionalProperties: false,
             },
         },
     },
     required: ["title", "items"],
-}
+    additionalProperties: false,
+} // Send the JSON shape to make sure the model returns correctly formatted data
 
 // The notes go inside <notes> delimiters and are treated as data only (prompt injection guard)
 const EXTRACTION_SYSTEM_PROMPT = `You extract action items from meeting notes.
@@ -89,7 +89,7 @@ export class LlmIntegrationService {
             EXTRACTION_TIMEOUT_MS,
         )
 
-        let response: LlmResponse
+        let response: CompleteResponse
 
         try {
             response = await this.provider.complete(
@@ -111,7 +111,7 @@ export class LlmIntegrationService {
             clearTimeout(timer)
         }
 
-        return parseReply(response)
+        return parseExtractionReply(response)
     }
 
     async runAgent({
@@ -308,7 +308,7 @@ function providerFailureReason(
 }
 
 // The reply must be JSON of the right shape, nothing else
-function parseReply(response: LlmResponse): ExtractionResult {
+function parseExtractionReply(response: CompleteResponse): ExtractionResult {
     const trimmed = response.text.trim()
     const json = EXTRACTION_JSON_FENCE.exec(trimmed)?.[1] ?? trimmed
 
