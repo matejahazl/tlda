@@ -88,10 +88,10 @@ export class MeetingService {
                 reason,
                 ...(logRawText && {
                     rawNotes: input.rawNotes,
-                    llmResponse: result.response?.text ?? null,
+                    llmResponse: result.llmResponse,
                 }),
-                inputTokens: result.response?.usage?.inputTokens,
-                outputTokens: result.response?.usage?.outputTokens,
+                inputTokens: result.usage.inputTokens,
+                outputTokens: result.usage.outputTokens,
                 latencyMs,
                 itemCount: result.ok
                     ? result.extraction.items.length

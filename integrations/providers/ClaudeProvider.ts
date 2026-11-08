@@ -1,6 +1,6 @@
 import "server-only"
 import Anthropic from "@anthropic-ai/sdk"
-import { isUnavailableStatus, LlmProvider } from "../LlmProvider"
+import { isUnavailableStatus, LlmProvider } from "./LlmProvider"
 import type {
     AgentMessage,
     ChatRequest,
@@ -9,7 +9,7 @@ import type {
     CompleteResponse,
     LlmUsage,
     ToolCall,
-} from "../types"
+} from "./types"
 
 const EFFORT = "low" // low effort keeps it short
 const THINKING_HEADROOM_TOKENS = 2000 // thinking counts toward max_tokens, so the reply isn't cut off

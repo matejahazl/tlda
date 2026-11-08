@@ -1,12 +1,12 @@
 import "server-only"
 import { MAX_ITEM_TEXT_LENGTH, MAX_ITEMS } from "@/lib/shared"
-import { LlmProvider } from "../LlmProvider"
+import { LlmProvider } from "./LlmProvider"
 import type {
     ChatRequest,
     ChatResponse,
     CompleteRequest,
     CompleteResponse,
-} from "../types"
+} from "./types"
 
 type MockCompleteReply = string | CompleteResponse
 export type MockCompleteHandler = (

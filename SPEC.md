@@ -233,7 +233,7 @@ Order in POST: validate → LLM call → validate LLM output → transaction. A 
 
 ## LLM integration (swappable)
 ```ts
-abstract class LlmProvider { // integrations/LlmProvider.ts
+abstract class LlmProvider { // integrations/providers/LlmProvider.ts
   abstract complete(
     // responseSchema: a standard JSON schema the reply must match (JSON mode); extraction sends it with maxOutputTokens
     request: { system: string; user: string; responseSchema?: object; maxOutputTokens?: number },
@@ -242,7 +242,7 @@ abstract class LlmProvider { // integrations/LlmProvider.ts
 
   // one turn of a tool-using conversation (used by the ask agent only)
   abstract chat(
-    request: { system: string; messages: AgentMessage[]; tools: ToolDecl[]; maxOutputTokens?: number },
+    request: { system: string; messages: AgentMessage[]; tools: ToolDeclaration[]; maxOutputTokens?: number },
     opts: { signal: AbortSignal },
   ): Promise<{
     reply: { kind: "text"; text: string } | { kind: "tool_calls"; calls: ToolCall[] };
@@ -251,7 +251,7 @@ abstract class LlmProvider { // integrations/LlmProvider.ts
   }>;
 }
 ```
-`AgentMessage`, `ToolDecl` (`name`, `description`, JSON-schema `parameters`) and `ToolCall` (`id`, `name`, `args: unknown`, an optional opaque `signature` the provider needs back unchanged, such as Gemini's thought signature) are our own neutral types in `integrations/types.ts`. Each provider translates them to and from its own wire format, so no provider type leaks out of `integrations/providers/`.
+`AgentMessage`, `ToolDeclaration` (`name`, `description`, JSON-schema `parameters`) and `ToolCall` (`id`, `name`, `args: unknown`, an optional opaque `signature` the provider needs back unchanged, such as Gemini's thought signature) are our own neutral types in `integrations/providers/types.ts` (the provider contract; `integrations/types.ts` holds what `LlmIntegrationService` returns to the services). Each provider translates them to and from its own wire format, so no provider type leaks out of `integrations/providers/`.
 - Implementations (in `integrations/providers/`): `GeminiProvider` and `MockProvider` (tests and offline dev). Another provider is one class extending `LlmProvider` plus one factory entry.
 - A factory picks the provider from env: `LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY`.
 - `LlmIntegrationService` (`integrations/`) wraps the active provider and owns: the prompt, the timeout, JSON parsing and zod validation. Providers only make the HTTP call and return the raw text plus token usage, so the verbatim response can always be logged. The service never throws, logs or touches the database: it returns a success or a failure with a `reason`. `MeetingService` logs the extraction event and maps the reason to an error code with the `LLM_FAILURE_CODES` lookup table in `lib/server/errors.ts` (server-only error mappings, reusable by any service). A valid empty list is a meeting rule, not an LLM failure, so `MeetingService` throws `NO_ACTION_ITEMS` itself.
@@ -296,7 +296,7 @@ A question box that answers things like "What's still open?" or "What did we dec
 
 ### Layers
 - `AskService` owns the tools: each tool is `{ name, description, args (zod schema), handler }`. Handlers are DB reads through Drizzle (queries live in the service, as in `MeetingService`). It also logs the ask event and maps a failure `reason` to an `AppError`.
-- `LlmIntegrationService.runAgent` owns the system prompt, the loop, the limits and validation of tool args and the answer. It turns each tool's zod schema into a `ToolDecl` with `z.toJSONSchema`. It gets the handlers from `AskService` as callbacks, so it still does no DB work, no logging and never throws: it returns success (`answer`, `sources`, `trace`, `usage`, `turns`) or failure (`reason`, `trace`, `usage`, `turns`). `trace` lists each tool call (`name`, `args`, `ok`, `rows`, `durationMs`) plus each raw provider response.
+- `LlmIntegrationService.runAgent` owns the system prompt, the loop, the limits and validation of tool args and the answer. It turns each tool's zod schema into a `ToolDeclaration` with `z.toJSONSchema`. It gets the handlers from `AskService` as callbacks, so it still does no DB work, no logging and never throws: it returns success (`answer`, `sources`, `trace`, `usage`, `turns`) or failure (`reason`, `trace`, `usage`, `turns`). `trace` lists each tool call (`name`, `args`, `ok`, `rows`, `durationMs`) plus each raw provider response.
 - The route only parses, validates and calls `AskService`.
 
 ### Tools (read-only)
@@ -353,7 +353,7 @@ Same definition of done as below, one step at a time.
 3. `AskService.ask` returning a fixed answer; the route calls it.
 4. `search_items` tool (schema + handler); tests.
 5. `list_meetings` and `get_meeting` tools; tests.
-6. Neutral agent types in `integrations/types.ts`; `chat()` added to `LlmProvider` (Gemini throws "not implemented" for now).
+6. Neutral agent types in `integrations/providers/types.ts`; `chat()` added to `LlmProvider` (Gemini throws "not implemented" for now).
 7. `MockProvider.chat` with scripted replies.
 8. `runAgent` for a single text turn, with answer validation. `AskService` uses `runAgent`; `bad_answer` in `LLM_FAILURE_CODES`; the generic `LLM_*` messages in `lib/shared/errors.ts` and the tests that assert the old ones. The agent is tested through `POST /api/ask` with a scripted `MockProvider`, like extraction.
 9. `runAgent` with tool calls and `sources`; route tests.

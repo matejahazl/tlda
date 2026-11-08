@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { LlmUnavailableError } from "../LlmProvider"
-import type { ChatRequest } from "../types"
 import { ClaudeProvider } from "./ClaudeProvider"
 import { GeminiProvider } from "./GeminiProvider"
+import { LlmUnavailableError } from "./LlmProvider"
+import type { ChatRequest } from "./types"
 
 const CLAUDE_TOOL_TURN = {
     id: "msg_1",

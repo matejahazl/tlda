@@ -1,16 +1,17 @@
 import "server-only"
 import { type Env, env } from "@/lib/server/env"
 import { LlmIntegrationService } from "./LlmIntegrationService"
-import type { LlmProvider } from "./LlmProvider"
 import { ClaudeProvider } from "./providers/ClaudeProvider"
 import { GeminiProvider } from "./providers/GeminiProvider"
+import type { LlmProvider } from "./providers/LlmProvider"
 import { MockProvider } from "./providers/MockProvider"
 
 export { LlmIntegrationService } from "./LlmIntegrationService"
-export { LlmProvider, LlmUnavailableError } from "./LlmProvider"
+export { LlmProvider, LlmUnavailableError } from "./providers/LlmProvider"
 export { ClaudeProvider } from "./providers/ClaudeProvider"
 export { GeminiProvider } from "./providers/GeminiProvider"
 export { MockProvider } from "./providers/MockProvider"
+export * from "./providers/types"
 export * from "./types"
 
 // The SDK clients hold a connection pool, so each provider is built once

@@ -8,7 +8,7 @@ import {
     GoogleGenAI,
     ThinkingLevel,
 } from "@google/genai"
-import { isUnavailableStatus, LlmProvider } from "../LlmProvider"
+import { isUnavailableStatus, LlmProvider } from "./LlmProvider"
 import type {
     AgentMessage,
     ChatRequest,
@@ -17,7 +17,7 @@ import type {
     CompleteResponse,
     LlmUsage,
     ToolCall,
-} from "../types"
+} from "./types"
 
 const TEMPERATURE = 0.1 // near-deterministic replies
 const THINKING_CONFIG = { thinkingLevel: ThinkingLevel.MINIMAL } // minimal to reduce latency

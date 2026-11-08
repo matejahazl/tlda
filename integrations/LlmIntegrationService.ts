@@ -2,21 +2,25 @@ import "server-only"
 import { z } from "zod"
 import type { AskSource } from "@/lib/shared"
 import { llmOutputSchema } from "@/lib/shared"
-import { type LlmProvider, LlmUnavailableError } from "./LlmProvider"
+import { type LlmProvider, LlmUnavailableError } from "./providers/LlmProvider"
 import type {
     AgentMessage,
+    ChatResponse,
+    CompleteResponse,
+    ToolCall,
+    ToolDeclaration,
+    ToolResult,
+} from "./providers/types"
+import type {
     AgentResult,
     AgentTool,
     AgentTrace,
-    ChatResponse,
-    CompleteResponse,
+    Extraction,
+    ExtractionFailureReason,
     ExtractionResult,
     ProviderFailureReason,
-    ToolCall,
     ToolCallTrace,
-    ToolDecl,
-    ToolOutput,
-    ToolResult,
+    ToolHandlerOutput,
 } from "./types"
 
 // Extraction
@@ -98,12 +102,18 @@ export class LlmIntegrationService {
                 ok: false,
                 reason: providerFailureReason(error, controller.signal.aborted),
                 cause: error,
+                llmResponse: null,
+                usage: {},
             }
         } finally {
             clearTimeout(timer)
         }
 
-        return parseExtractionReply(response)
+        return {
+            ...parseExtractionReply(response.text),
+            llmResponse: response.text,
+            usage: response.usage ?? {},
+        }
     }
 
     async runAgent({
@@ -113,11 +123,13 @@ export class LlmIntegrationService {
         question: string
         tools: AgentTool[]
     }): Promise<AgentResult> {
-        const decls: ToolDecl[] = tools.map(({ name, description, args }) => ({
-            name,
-            description,
-            parameters: z.toJSONSchema(args, { io: "input" }), // input: defaulted args stay optional
-        }))
+        const decls: ToolDeclaration[] = tools.map(
+            ({ name, description, args }) => ({
+                name,
+                description,
+                parameters: z.toJSONSchema(args, { io: "input" }), // input: defaulted args stay optional
+            }),
+        )
         const messages: AgentMessage[] = [{ role: "user", text: question }]
         const sources = new Map<number, AskSource>()
         const run = {
@@ -189,7 +201,7 @@ export class LlmIntegrationService {
 
                 for (const call of reply.calls) {
                     const startedAt = performance.now()
-                    let out: ToolOutput & { ok: boolean }
+                    let out: ToolHandlerOutput & { ok: boolean }
 
                     try {
                         out = callTool(call, tools)
@@ -236,7 +248,7 @@ export class LlmIntegrationService {
 function callTool(
     call: ToolCall,
     tools: AgentTool[],
-): ToolOutput & { ok: boolean } {
+): ToolHandlerOutput & { ok: boolean } {
     const tool = tools.find((t) => t.name === call.name)
 
     if (!tool) {
@@ -300,8 +312,12 @@ function providerFailureReason(
 }
 
 // The reply must be JSON of the right shape, nothing else
-function parseExtractionReply(response: CompleteResponse): ExtractionResult {
-    const trimmed = response.text.trim()
+function parseExtractionReply(
+    text: string,
+):
+    | { ok: true; extraction: Extraction }
+    | { ok: false; reason: ExtractionFailureReason } {
+    const trimmed = text.trim()
     const json = EXTRACTION_JSON_FENCE.exec(trimmed)?.[1] ?? trimmed
 
     let data: unknown
@@ -309,7 +325,7 @@ function parseExtractionReply(response: CompleteResponse): ExtractionResult {
     try {
         data = JSON.parse(json)
     } catch {
-        return { ok: false, reason: "not_json", response }
+        return { ok: false, reason: "not_json" }
     }
 
     const result = llmOutputSchema.safeParse(data)
@@ -326,9 +342,8 @@ function parseExtractionReply(response: CompleteResponse): ExtractionResult {
         return {
             ok: false,
             reason: isBadItem ? "prose" : "schema_mismatch",
-            response,
         }
     }
 
-    return { ok: true, extraction: result.data, response }
+    return { ok: true, extraction: result.data }
 }
