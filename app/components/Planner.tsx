@@ -1,7 +1,7 @@
 "use client"
 
 import { PlannerProvider } from "@/app/context"
-import type { PaginatedMeetings } from "@/types"
+import type { PaginatedMeetings } from "@/lib/shared"
 import { AskPanel } from "./AskPanel"
 import { MeetingForm } from "./MeetingForm"
 import { MeetingList } from "./MeetingList"

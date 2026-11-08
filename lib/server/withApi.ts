@@ -1,9 +1,9 @@
 import "server-only"
 import { randomUUID } from "node:crypto"
 import type { Logger } from "pino"
-import { AppError, ERROR_TABLE } from "@/lib/errors"
 import { logger } from "@/lib/server/logger"
-import type { ApiErrorBody } from "@/types"
+import type { ApiErrorBody } from "@/lib/shared"
+import { AppError, ERROR_TABLE } from "@/lib/shared"
 
 const REQUEST_ID_PATTERN = /^[\w.-]{1,64}$/
 

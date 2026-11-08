@@ -1,6 +1,6 @@
-import { askSchema } from "@/lib/schemas"
 import { parseOrThrow, readJson } from "@/lib/server/validate"
 import { withApi } from "@/lib/server/withApi"
+import { askSchema } from "@/lib/shared"
 import { getAskService } from "@/services"
 
 export const runtime = "nodejs" // better-sqlite3 needs Node

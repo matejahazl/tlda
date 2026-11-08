@@ -1,6 +1,5 @@
 import type { z } from "zod"
-import type { llmOutputSchema } from "@/lib/schemas"
-import type { AskSource } from "@/types"
+import type { AskSource, llmOutputSchema } from "@/lib/shared"
 
 export type ProviderFailureReason =
     "timeout" | "provider_unavailable" | "provider_error"

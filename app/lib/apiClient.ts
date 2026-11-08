@@ -1,5 +1,5 @@
-import { ERROR_TABLE } from "@/lib/errors"
-import type { ApiErrorBody, ErrorCode } from "@/types"
+import type { ApiErrorBody, ErrorCode } from "@/lib/shared"
+import { ERROR_TABLE } from "@/lib/shared"
 
 type RequestOptions = {
     method?: "GET" | "POST" | "PATCH" | "DELETE"

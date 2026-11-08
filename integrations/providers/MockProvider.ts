@@ -1,5 +1,5 @@
 import "server-only"
-import { MAX_ITEM_TEXT_LENGTH, MAX_ITEMS } from "@/lib/schemas"
+import { MAX_ITEM_TEXT_LENGTH, MAX_ITEMS } from "@/lib/shared"
 import { LlmProvider } from "../LlmProvider"
 import type {
     ChatRequest,

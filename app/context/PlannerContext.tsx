@@ -5,7 +5,7 @@ import { type CreatePhase, useCreateMeeting } from "@/app/hooks"
 import type { ApiError } from "@/app/lib/apiClient"
 import { pluralize } from "@/app/lib/format"
 import { patchItem } from "@/app/lib/meetings"
-import type { ActionItem, CreateMeetingBody, Meeting } from "@/types"
+import type { ActionItem, CreateMeetingBody, Meeting } from "@/lib/shared"
 
 type PlannerContextValue = {
     meetings: Meeting[]

@@ -6,7 +6,7 @@ import {
     sqliteTable,
     text,
 } from "drizzle-orm/sqlite-core"
-import { ITEM_STATUSES } from "@/lib/schemas"
+import { ITEM_STATUSES } from "@/lib/shared"
 
 const isoTimestamp = customType<{ data: string; driverData: number }>({
     dataType: () => "integer",

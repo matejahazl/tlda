@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { ApiError, apiFetch } from "@/app/lib/apiClient"
-import type { CreateMeetingBody, Meeting } from "@/types"
+import type { CreateMeetingBody, Meeting } from "@/lib/shared"
 
 export type CreatePhase = "idle" | "processing" | "error"
 

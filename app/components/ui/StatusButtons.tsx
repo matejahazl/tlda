@@ -1,5 +1,5 @@
 import type { ComponentType } from "react"
-import type { ItemStatus } from "@/types"
+import type { ItemStatus } from "@/lib/shared"
 import { DoneIcon, InProgressIcon, OpenIcon } from "../icons"
 
 const STATUS_OPTIONS: {

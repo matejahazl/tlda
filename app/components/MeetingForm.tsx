@@ -2,7 +2,7 @@ import { type SubmitEvent, useState } from "react"
 import { usePlanner } from "@/app/context"
 import type { CreatePhase } from "@/app/hooks"
 import { pluralize } from "@/app/lib/format"
-import { createMeetingSchema, fieldMessages } from "@/lib/schemas"
+import { createMeetingSchema, fieldMessages } from "@/lib/shared"
 import { Button, ErrorBanner, Textarea, TextInput } from "./ui"
 
 const SUBMIT_LABELS: Record<CreatePhase, string> = {

@@ -1,4 +1,4 @@
-import type { Meeting } from "@/types"
+import type { Meeting } from "@/lib/shared"
 
 const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
     weekday: "short",

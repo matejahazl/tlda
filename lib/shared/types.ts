@@ -3,7 +3,7 @@ import type {
     createMeetingSchema,
     ITEM_STATUSES,
     patchItemSchema,
-} from "@/lib/schemas"
+} from "./schemas"
 
 export type ItemStatus = (typeof ITEM_STATUSES)[number]
 

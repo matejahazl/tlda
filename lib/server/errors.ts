@@ -1,6 +1,6 @@
 import "server-only"
 import type { AgentFailureReason, FailureReason } from "@/integrations"
-import type { ErrorCode } from "@/types"
+import type { ErrorCode } from "@/lib/shared"
 
 // Extraction and ask failure reasons, mapped to the codes the client sees
 export const LLM_FAILURE_CODES: Record<

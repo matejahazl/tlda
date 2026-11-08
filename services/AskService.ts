@@ -1,10 +1,10 @@
 import "server-only"
 import type { Logger } from "pino"
 import type { AgentTool, LlmIntegrationService } from "@/integrations"
-import { AppError, ERROR_TABLE } from "@/lib/errors"
 import type { Db } from "@/lib/server/db"
 import { LLM_FAILURE_CODES } from "@/lib/server/errors"
-import type { AskAnswer } from "@/types"
+import type { AskAnswer } from "@/lib/shared"
+import { AppError, ERROR_TABLE } from "@/lib/shared"
 import { getMeetingTool, listMeetingsTool, searchItemsTool } from "./askTools"
 
 export class AskService {

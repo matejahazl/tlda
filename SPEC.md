@@ -36,7 +36,7 @@ The UI design lives in a Claude artifact (Design canvas, 5 boards: interactive p
 - vitest for tests.
 - LLM: Gemini free tier by default (key from Google AI Studio), swappable (see below).
 - No auth, no state library, no queue, no Fastify.
-- Layers: route handlers (`app/api/**/route.ts`: `app/api/meetings/`, `app/api/meetings/[id]/`, `app/api/action-items/[id]/`, `app/api/ask/`) only handle HTTP (parse, validate, call the service, shape the response). `services/MeetingService.ts` owns the logic: the DB writes, the LLM call, the extraction log, and turning every failure into an `AppError`. `services/AskService.ts` does the same for questions (see "Ask about your meetings"). `integrations/` holds the LLM integration (`LlmIntegrationService`, providers, prompt, output parsing) and does no logging, no DB work and knows no HTTP error codes. `lib/server/db/` holds the schema and the connection (the queries live in `MeetingService`); `lib/server/` holds the server-only helpers (`withApi`, logger, env, request validation), `lib/` the code shared with the client (schemas, error table), `app/lib/` the client-only helpers and `types/` the shared types. Routes call the service, never the DB or the integration directly.
+- Layers: route handlers (`app/api/**/route.ts`: `app/api/meetings/`, `app/api/meetings/[id]/`, `app/api/action-items/[id]/`, `app/api/ask/`) only handle HTTP (parse, validate, call the service, shape the response). `services/MeetingService.ts` owns the logic: the DB writes, the LLM call, the extraction log, and turning every failure into an `AppError`. `services/AskService.ts` does the same for questions (see "Ask about your meetings"). `integrations/` holds the LLM integration (`LlmIntegrationService`, providers, prompt, output parsing) and does no logging, no DB work and knows no HTTP error codes. `lib/server/db/` holds the schema and the connection (the queries live in `MeetingService`); `lib/server/` holds the server-only helpers (`withApi`, logger, env, request validation), `lib/shared/` the code shared with the client (schemas, error table, types) and `app/lib/` the client-only helpers. Routes call the service, never the DB or the integration directly.
 - Frontend: the client calls the Route Handlers with `fetch` (no Server Actions). Keep fetch and state logic out of components:
   - `app/lib/apiClient.ts`: thin typed `fetch` wrapper that parses the error envelope (`code`, `message`, `fields`, `requestId`) into a single `ApiError` type. All hooks use it.
   - `app/hooks/useCreateMeeting.ts`: returns `{ phase, error, submit, reset }`, where `phase` is `'idle' | 'processing' | 'error'`; aborts the request on unmount.
@@ -324,7 +324,7 @@ No tool writes anything. That is deliberate: a confused or prompt-injected model
 - Tool calling mode is automatic (Gemini `functionCallingConfig.mode: "AUTO"`): the model chooses between a tool call and a text reply. A tool call is not forced, so an off-topic question can be declined in one turn. The off-topic rule is prompt guidance, not a guarantee; the guarantees are in code (read-only tools, answer limits, server-built `sources`).
 
 ### Validation
-- `askSchema` in `lib/` (shared with the client): `{ question }`, `.strict()`, trimmed, control characters stripped, 1-500 chars (`MAX_QUESTION_LENGTH`).
+- `askSchema` in `lib/shared/` (shared with the client): `{ question }`, `.strict()`, trimmed, control characters stripped, 1-500 chars (`MAX_QUESTION_LENGTH`).
 - The final answer is untrusted: trimmed, 1-2000 chars (`AGENT_MAX_ANSWER_LENGTH`), line breaks allowed. Empty or over-long → failure `bad_answer`. Rendered only as plain React text with `white-space: pre-line`.
 - On the client the "Ask" button stays disabled while the question is empty. A question over the maximum shows a hint under the input ("Questions are limited to 500 characters").
 
@@ -348,14 +348,14 @@ One ask event per request, written by `AskService`, for every outcome: `provider
 
 ### Build order for this feature
 Same definition of done as below, one step at a time.
-1. `askSchema` + constants in `lib/`; schema tests.
+1. `askSchema` + constants in `lib/shared/`; schema tests.
 2. `app/api/ask/route.ts` with `withApi`, validation and a stub answer; route tests for 400s and the happy path.
 3. `AskService.ask` returning a fixed answer; the route calls it.
 4. `search_items` tool (schema + handler); tests.
 5. `list_meetings` and `get_meeting` tools; tests.
 6. Neutral agent types in `integrations/types.ts`; `chat()` added to `LlmProvider` (Gemini throws "not implemented" for now).
 7. `MockProvider.chat` with scripted replies.
-8. `runAgent` for a single text turn, with answer validation. `AskService` uses `runAgent`; `bad_answer` in `LLM_FAILURE_CODES`; the generic `LLM_*` messages in `lib/errors.ts` and the tests that assert the old ones. The agent is tested through `POST /api/ask` with a scripted `MockProvider`, like extraction.
+8. `runAgent` for a single text turn, with answer validation. `AskService` uses `runAgent`; `bad_answer` in `LLM_FAILURE_CODES`; the generic `LLM_*` messages in `lib/shared/errors.ts` and the tests that assert the old ones. The agent is tested through `POST /api/ask` with a scripted `MockProvider`, like extraction.
 9. `runAgent` with tool calls and `sources`; route tests.
 10. Unknown tool and invalid args go back to the model; route tests.
 11. Turn cap and the 30s timeout; route tests with fake timers.

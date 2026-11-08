@@ -1,7 +1,7 @@
 import "server-only"
 import { z } from "zod"
-import { llmOutputSchema } from "@/lib/schemas"
-import type { AskSource } from "@/types"
+import type { AskSource } from "@/lib/shared"
+import { llmOutputSchema } from "@/lib/shared"
 import { type LlmProvider, LlmUnavailableError } from "./LlmProvider"
 import type {
     AgentMessage,

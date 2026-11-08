@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { Planner } from "@/app/components"
 import { MeetingForm } from "@/app/components/MeetingForm"
-import type { Meeting } from "@/types"
+import type { Meeting } from "@/lib/shared"
 
 const HTML = "<img src=x onerror=alert(1)>"
 

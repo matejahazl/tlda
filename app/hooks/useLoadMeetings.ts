@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { apiFetch } from "@/app/lib/apiClient"
-import type { Meeting, PaginatedMeetings } from "@/types"
+import type { Meeting, PaginatedMeetings } from "@/lib/shared"
 
 // Owns the cursor: only the list that loads more pages needs it
 export function useLoadMeetings(

@@ -1,10 +1,10 @@
 import "server-only"
 import { and, asc, count, desc, eq, sql } from "drizzle-orm"
 import { z } from "zod"
-import { ITEM_STATUSES } from "@/lib/schemas"
 import type { Db } from "@/lib/server/db"
 import { actionItems, meetings } from "@/lib/server/db"
-import type { AskSource } from "@/types"
+import type { AskSource } from "@/lib/shared"
+import { ITEM_STATUSES } from "@/lib/shared"
 
 const MAX_TOOL_ROWS = 50 // max rows one tool call returns, so a result can't flood the context
 const DEFAULT_TOOL_ROWS = 20 // rows returned when the model gives no limit

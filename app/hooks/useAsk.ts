@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { ApiError, apiFetch } from "@/app/lib/apiClient"
-import type { AskAnswer } from "@/types"
+import type { AskAnswer } from "@/lib/shared"
 
 export type AskPhase = "idle" | "asking" | "answered" | "error"
 

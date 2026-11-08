@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import { createDb, type Db } from "@/lib/server/db"
 import { actionItems, meetings } from "@/lib/server/db/schema"
-import type { ItemStatus } from "@/types"
+import type { ItemStatus } from "@/lib/shared"
 import { getMeetingTool, listMeetingsTool, searchItemsTool } from "./askTools"
 
 let db: Db

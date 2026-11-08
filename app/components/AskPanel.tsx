@@ -1,7 +1,7 @@
 import { type SubmitEvent, useState } from "react"
 import { type AskPhase, useAsk } from "@/app/hooks"
-import { askSchema, fieldMessages } from "@/lib/schemas"
-import type { AskAnswer } from "@/types"
+import type { AskAnswer } from "@/lib/shared"
+import { askSchema, fieldMessages } from "@/lib/shared"
 import { Button, ErrorBanner, TextInput } from "./ui"
 
 const SUBMIT_LABELS: Record<AskPhase, string> = {

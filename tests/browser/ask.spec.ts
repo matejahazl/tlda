@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test"
-import { MAX_QUESTION_LENGTH } from "@/lib/schemas"
+import { MAX_QUESTION_LENGTH } from "@/lib/shared"
 import {
     ANSWER,
     answerRequest,

@@ -26,17 +26,17 @@ import type {
     MockChatStep,
     MockCompleteHandler,
 } from "@/integrations/providers/MockProvider"
+import { createDb, type Db } from "@/lib/server/db"
+import { actionItems, meetings } from "@/lib/server/db/schema"
+import type * as LoggerModule from "@/lib/server/logger"
+import { logger } from "@/lib/server/logger"
 import {
     MAX_ITEM_TEXT_LENGTH,
     MAX_NOTES_LENGTH,
     MAX_QUESTION_LENGTH,
     MAX_TITLE_LENGTH,
     MIN_NOTES_LENGTH,
-} from "@/lib/schemas"
-import { createDb, type Db } from "@/lib/server/db"
-import { actionItems, meetings } from "@/lib/server/db/schema"
-import type * as LoggerModule from "@/lib/server/logger"
-import { logger } from "@/lib/server/logger"
+} from "@/lib/shared"
 import { AskService } from "@/services/AskService"
 import { MAX_SEARCH_QUERY_LENGTH } from "@/services/askTools"
 import { MeetingService } from "@/services/MeetingService"

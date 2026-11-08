@@ -2,7 +2,6 @@ import "server-only"
 import { desc, eq, lt } from "drizzle-orm"
 import type { Logger } from "pino"
 import type { LlmIntegrationService } from "@/integrations"
-import { AppError, ERROR_TABLE } from "@/lib/errors"
 import type { Db } from "@/lib/server/db"
 import {
     actionItems,
@@ -17,7 +16,8 @@ import type {
     ItemStatus,
     Meeting,
     PaginatedMeetings,
-} from "@/types"
+} from "@/lib/shared"
+import { AppError, ERROR_TABLE } from "@/lib/shared"
 
 const DEFAULT_MEETING_TITLE = "Untitled meeting" // used when neither the user nor the model gives a valid title
 const MEETINGS_PAGE_SIZE = 5 // meetings per page of the list

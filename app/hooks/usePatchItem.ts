@@ -1,7 +1,7 @@
 import { startTransition, useOptimistic } from "react"
 import { apiFetch } from "@/app/lib/apiClient"
 import { patchItem } from "@/app/lib/meetings"
-import type { ActionItem, ActionItemChanges, Meeting } from "@/types"
+import type { ActionItem, ActionItemChanges, Meeting } from "@/lib/shared"
 
 type PendingPatch = { itemId: number; changes: ActionItemChanges }
 

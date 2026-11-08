@@ -1,6 +1,6 @@
-import { idSchema } from "@/lib/schemas"
 import { parseOrThrow } from "@/lib/server/validate"
 import { withApi } from "@/lib/server/withApi"
+import { idSchema } from "@/lib/shared"
 import { getMeetingService } from "@/services"
 
 export const runtime = "nodejs" // better-sqlite3 needs Node

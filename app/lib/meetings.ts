@@ -1,4 +1,4 @@
-import type { ActionItem, Meeting } from "@/types"
+import type { ActionItem, Meeting } from "@/lib/shared"
 
 // Returns a copy of the meeting with one item changed
 export function patchItem(

@@ -6,7 +6,7 @@ import {
     MAX_ITEM_TEXT_LENGTH,
     MAX_ITEMS,
     MAX_QUESTION_LENGTH,
-} from "@/lib/schemas"
+} from "@/lib/shared/schemas"
 
 const NOTES = "Alice will send the report to Bob by Friday."
 
