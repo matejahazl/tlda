@@ -31,6 +31,8 @@ type MockFakes = {
 
 // Tests pass fakes to script any reply or failure. Without them it fakes plausible replies.
 export class MockProvider extends LlmProvider {
+    protected readonly name = "Mock"
+
     private turn = 0
 
     constructor(private readonly fakes: MockFakes = {}) {

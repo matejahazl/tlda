@@ -1,7 +1,6 @@
 import "server-only"
 import Anthropic from "@anthropic-ai/sdk"
-import { LlmUnavailableError } from "../LlmIntegrationService"
-import { LlmProvider } from "../LlmProvider"
+import { isUnavailableStatus, LlmProvider } from "../LlmProvider"
 import type {
     AgentMessage,
     ChatRequest,
@@ -18,15 +17,15 @@ const DEFAULT_MAX_TOKENS = 16000 // when the caller sets no limit
 
 // The SDK keeps its own connection pool, so the client is made once per provider and the provider once per app
 export class ClaudeProvider extends LlmProvider {
+    protected readonly name = "Claude"
     private readonly client: Anthropic
 
     constructor(
         apiKey: string,
         private readonly model: string,
-        options: { fetch?: typeof fetch } = {},
     ) {
         super()
-        this.client = new Anthropic({ apiKey, maxRetries: 0, ...options })
+        this.client = new Anthropic({ apiKey, maxRetries: 0 })
     }
 
     async complete(
@@ -104,32 +103,21 @@ export class ClaudeProvider extends LlmProvider {
         }
     }
 
-    private async create(
+    private create(
         body: Anthropic.MessageCreateParamsNonStreaming,
         signal: AbortSignal,
     ): Promise<Anthropic.Message> {
-        try {
-            return await this.client.messages.create(body, { signal })
-        } catch (error) {
-            if (signal.aborted) {
-                throw error
-            }
+        return this.send(signal, () =>
+            this.client.messages.create(body, { signal }),
+        )
+    }
 
-            // Network errors, 429 and 5xx (529 overloaded included) are the provider's problem
-            const unavailable =
-                error instanceof Anthropic.APIConnectionError ||
-                error instanceof Anthropic.RateLimitError ||
-                (error instanceof Anthropic.APIError &&
-                    (error.status ?? 0) >= 500)
-
-            if (unavailable) {
-                throw new LlmUnavailableError("Claude is unavailable", {
-                    cause: error,
-                })
-            }
-
-            throw error // anything else (bad key, bad model, bad request) is ours
-        }
+    protected isUnavailable(error: unknown): boolean {
+        return (
+            error instanceof Anthropic.APIConnectionError ||
+            (error instanceof Anthropic.APIError &&
+                isUnavailableStatus(error.status ?? 0))
+        )
     }
 }
 

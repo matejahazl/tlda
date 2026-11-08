@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { LlmUnavailableError } from "../LlmIntegrationService"
+import { LlmUnavailableError } from "../LlmProvider"
 import { GeminiProvider } from "./GeminiProvider"
 
 const TOOL_TURN = {
@@ -127,5 +127,33 @@ describe("GeminiProvider", () => {
         await expect(
             provider.complete({ system: "s", user: "u" }, { signal }),
         ).rejects.toBeInstanceOf(LlmUnavailableError)
+    })
+
+    it("turns a network failure into LlmUnavailableError", async () => {
+        vi.stubGlobal("fetch", async () => {
+            throw new TypeError("fetch failed")
+        })
+        const provider = new GeminiProvider("key", "gemini-test")
+
+        await expect(
+            provider.complete({ system: "s", user: "u" }, { signal }),
+        ).rejects.toBeInstanceOf(LlmUnavailableError)
+    })
+
+    it("lets an abort through unchanged, so it is reported as a timeout", async () => {
+        const abort = new DOMException("aborted", "AbortError")
+        const controller = new AbortController()
+        controller.abort(abort)
+        vi.stubGlobal("fetch", async () => {
+            throw abort
+        })
+        const provider = new GeminiProvider("key", "gemini-test")
+
+        await expect(
+            provider.complete(
+                { system: "s", user: "u" },
+                { signal: controller.signal },
+            ),
+        ).rejects.toBe(abort)
     })
 })

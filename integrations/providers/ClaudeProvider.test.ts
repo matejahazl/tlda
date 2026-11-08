@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest"
-import { LlmUnavailableError } from "../LlmIntegrationService"
+import { afterEach, describe, expect, it, vi } from "vitest"
+import { LlmUnavailableError } from "../LlmProvider"
 import { ClaudeProvider } from "./ClaudeProvider"
 
 const TOOL_TURN = {
@@ -20,28 +20,30 @@ const TOOL_TURN = {
     usage: { input_tokens: 10, output_tokens: 5 },
 } // a thinking block before the call, which must be sent back unchanged
 
-function fakeFetch(status: number, body: unknown) {
+function stubFetch(status: number, body: unknown) {
     const bodies: Record<string, unknown>[] = []
-    const fetchFn = (async (_url: unknown, init?: RequestInit) => {
+    vi.stubGlobal("fetch", async (_url: unknown, init?: RequestInit) => {
         bodies.push(JSON.parse(String(init?.body)))
 
         return new Response(JSON.stringify(body), {
             status,
             headers: { "content-type": "application/json" },
         })
-    }) as typeof fetch
+    })
 
-    return { fetchFn, bodies }
+    return bodies
 }
 
 const signal = new AbortController().signal
 
+afterEach(() => {
+    vi.unstubAllGlobals()
+})
+
 describe("ClaudeProvider", () => {
     it("maps tool calls and replays the assistant turn unchanged", async () => {
-        const { fetchFn, bodies } = fakeFetch(200, TOOL_TURN)
-        const provider = new ClaudeProvider("key", "claude-test", {
-            fetch: fetchFn,
-        })
+        const bodies = stubFetch(200, TOOL_TURN)
+        const provider = new ClaudeProvider("key", "claude-test")
         const request = {
             system: "s",
             messages: [{ role: "user" as const, text: "What's open?" }],
@@ -100,13 +102,11 @@ describe("ClaudeProvider", () => {
     })
 
     it("turns a 429 into LlmUnavailableError", async () => {
-        const { fetchFn } = fakeFetch(429, {
+        stubFetch(429, {
             type: "error",
             error: { type: "rate_limit_error", message: "slow down" },
         })
-        const provider = new ClaudeProvider("key", "claude-test", {
-            fetch: fetchFn,
-        })
+        const provider = new ClaudeProvider("key", "claude-test")
 
         await expect(
             provider.complete({ system: "s", user: "u" }, { signal }),
