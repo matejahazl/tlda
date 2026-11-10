@@ -21,6 +21,7 @@ import type {
 
 const TEMPERATURE = 0.1 // near-deterministic replies
 const THINKING_CONFIG = { thinkingLevel: ThinkingLevel.MINIMAL } // minimal to reduce latency
+const NETWORK_FAILURE_REGEX = /^(fetch failed|terminated)/ // no connection, or the connection dropped mid-response
 
 // The SDK keeps its own client, so the client is made once per provider and the provider once per app
 export class GeminiProvider extends LlmProvider {
@@ -133,7 +134,9 @@ export class GeminiProvider extends LlmProvider {
 
     protected isUnavailable(error: unknown): boolean {
         return (
-            error instanceof TypeError || // fetch's network failure, passed through by the SDK
+            // Node fetch's network failure, passed through by the SDK; any other TypeError is a bug
+            (error instanceof TypeError &&
+                NETWORK_FAILURE_REGEX.test(error.message)) ||
             (error instanceof ApiError && isUnavailableStatus(error.status))
         )
     }

@@ -190,6 +190,19 @@ describe("GeminiProvider", () => {
             ],
         })
     })
+
+    it("keeps a TypeError that isn't a network failure as an internal error", async () => {
+        vi.stubGlobal("fetch", async () => {
+            throw new TypeError("Cannot read properties of undefined")
+        })
+
+        await expect(
+            new GeminiProvider("key", "gemini-test").complete(
+                { system: "s", user: "u" },
+                { signal },
+            ),
+        ).rejects.not.toBeInstanceOf(LlmUnavailableError)
+    })
 })
 
 describe.each(PROVIDERS)("$name failures", ({ create, rateLimitBody }) => {
@@ -201,15 +214,18 @@ describe.each(PROVIDERS)("$name failures", ({ create, rateLimitBody }) => {
         ).rejects.toBeInstanceOf(LlmUnavailableError)
     })
 
-    it("turns a network failure into LlmUnavailableError", async () => {
-        vi.stubGlobal("fetch", async () => {
-            throw new TypeError("fetch failed")
-        })
+    it.each(["fetch failed", "terminated"])(
+        "turns a network failure (%s) into LlmUnavailableError",
+        async (message) => {
+            vi.stubGlobal("fetch", async () => {
+                throw new TypeError(message)
+            })
 
-        await expect(
-            create().complete({ system: "s", user: "u" }, { signal }),
-        ).rejects.toBeInstanceOf(LlmUnavailableError)
-    })
+            await expect(
+                create().complete({ system: "s", user: "u" }, { signal }),
+            ).rejects.toBeInstanceOf(LlmUnavailableError)
+        },
+    )
 
     it("lets an abort through, so it is reported as a timeout", async () => {
         const controller = new AbortController()
